@@ -1,0 +1,134 @@
+
+module Convolution = struct
+    let rec convolution_row' input filter (row, col) =
+        let (row', col') = Matrix.dimensions filter in
+        if col < 0 then Ok [] else
+        let sub_m = Matrix.sub_matrix input (row, col) (row', col') in
+        let dot_p = Res.bind sub_m (fun x -> Matrix.dot_product x filter) in
+        let head = convolution_row' input filter (row, col - 1) in (* col decreases to let imandra prove termination *)
+        Res.bind2 head dot_p (fun x y -> Ok (x @ [y]))
+
+    (* Apply convolution operation with given filter on input matrix's given row, starting from the right *)
+    let convolution_row input filter row =
+        let (i_rows, i_cols) = Matrix.dimensions input in
+        let (f_rows, f_cols) = Matrix.dimensions filter in
+        if i_rows < f_rows then Error "convolution_row: filter's height is greater than input's" else
+        if i_cols < f_cols then Error "convolution_row: filter's width is greater than input's" else
+        
+        (* Compute starting column's index (from the right) *)
+        let col = (i_cols - f_cols) in (* <-- this will need to change when variable stride is added *)
+        convolution_row' input filter (row, col)
+        
+
+    (* Apply convolution operation with given filter on given input 2d matrix *)
+    let convolution (input: Z.t Matrix.matrix) (filter: Z.t Matrix.matrix) = 
+        if not (Matrix.is_valid input) || not (Matrix.is_valid filter) then Error "convolution: invalid matrix" else
+        let (i_rows, _) = Matrix.dimensions input in
+        let (f_rows, _) = Matrix.dimensions filter in
+        if i_rows < f_rows then Error ("convolution: filter's size is greater than input's: i_rows: " ^ (i_to_s i_rows) ^ " f_rows: " ^ (i_to_s f_rows)) else
+        let acc_fun (i, xs) _ =                                (* for workaround for iterating over input's lines; i is the current line index *)
+            if f_rows + i > i_rows then (i + 1, xs) else       (* skip last lines *)
+            let x = convolution_row input filter i in
+            (i + 1, Res.bind2 x xs (fun x xs -> Ok (xs@[x]))) in
+        let (_, res) = List.fold_left acc_fun (0, Ok []) input in 
+        res
+
+
+    (* Apply convoluiton operation with given filter on input 3d matrix, i.e. with channels *)
+    let conv_channels (input: Z.t Matrix.matrix list) (filter: Z.t Matrix.matrix list) =
+        if List.length input <> List.length filter then Error "conv_channels: invalid dimensions" else
+        let m = Vec.map2 convolution input filter in                                (* (m: result Z.t matrix result) -> need to convert to Z.t matrix result *)
+        let acc_fun acc el = Res.bind2 acc el (fun acc el -> Ok (acc @ [el])) in
+        let m' = Res.bind m (fun m -> List.fold_left acc_fun (Ok []) m) in          (* convolution applied to each channel *)
+        (* add the resulting channels together *)
+        let acc_fun' acc el = Res.bind acc (fun acc -> Matrix.add acc el) in
+        let head = Res.bind m' Vec.hd in
+        let tail = Res.bind m' Vec.tl in
+        let res = Res.bind tail (fun tail -> List.fold_left acc_fun' head tail) in
+        res
+end
+
+
+(*  Test values convolution ================= *)
+(*
+let test =     [
+    [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+    [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+    [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+    [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+    [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+    [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+    [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+    [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+];;
+
+let filter =     [
+    [0.; 1.; 0.];
+    [0.; 1.; 0.];
+    [0.; 1.; 0.]
+];;
+
+let res = Ok [
+    [0.;0.;3.;3.;0.;0.];
+    [0.;0.;3.;3.;0.;0.];
+    [0.;0.;3.;3.;0.;0.];
+    [0.;0.;3.;3.;0.;0.];
+    [0.;0.;3.;3.;0.;0.];
+    [0.;0.;3.;3.;0.;0.];
+];; 
+
+instance (fun x -> Matrix.is_valid x && Convolution.convolution test x = res)
+verify (fun x -> Matrix.is_valid x && Matrix.dimensions x = (3, 3) ==> Res.map Matrix.dimensions (Convolution.convolution test x) = Ok (5, 5))
+
+
+(* Test values conv_channels ================= *)
+
+let test' = [
+    [
+        [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 1.; 1.; 0.; 0.; 0. ];
+    ];
+    [
+        [ 0.; 0.; 0.; 2.; 2.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 2.; 2.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 2.; 2.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 2.; 2.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 2.; 2.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 2.; 2.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 2.; 2.; 0.; 0.; 0. ];
+        [ 0.; 0.; 0.; 2.; 2.; 0.; 0.; 0. ];
+    ]
+];;
+
+let filter' = [
+    [
+        [0.; 1.; 0.];
+        [0.; 1.; 0.];
+        [0.; 1.; 0.];
+    ];
+    [
+        [0.; 1.; 0.];
+        [0.; 1.; 0.];
+        [0.; 1.; 0.];
+    ];
+];;
+
+let res' = Ok [
+    [ 0.; 0.; 9.; 9.; 0.; 0. ];
+    [ 0.; 0.; 9.; 9.; 0.; 0. ];
+    [ 0.; 0.; 9.; 9.; 0.; 0. ];
+    [ 0.; 0.; 9.; 9.; 0.; 0. ];
+    [ 0.; 0.; 9.; 9.; 0.; 0. ];
+    [ 0.; 0.; 9.; 9.; 0.; 0. ]
+];;
+
+Convolution.conv_channels test' filter'
+
+instance (fun x -> Convolution.conv_channels test' x = res')
+*)

@@ -1,0 +1,177 @@
+let () = System.use "fully_connected.iml";;
+
+(* 
+
+We want to prove that for a perceptron with positive weights and positive inputs,
+if the input increases, the output will increase as well
+
+*)
+
+let rec dot_product l1 l2 =
+  match (l1, l2) with
+    | ([], _) | (_, []) -> 0.
+    | (h1::t1, h2::t2) -> (h1 *. h2) +. (dot_product t1 t2)
+
+(* 
+  f = activation function
+  w = weights
+  i = inputs
+*)
+let perceptron f w b i = let z = b +. dot_product w i in
+  f z
+
+let thresh t x = if x >=. t then x else 0.;;
+
+#redef;;
+let id x = x;;
+#redef off;;
+
+let perceptron' = perceptron id
+
+let perceptron'' = perceptron (thresh 1.)
+
+let perceptron''' k = perceptron (thresh k)
+
+let rec positive l = match l with
+  | [] -> true
+  | h::t -> h >=. 0. && (positive t)
+
+(* lexicographically comparing 2 lists *)
+let rec gte l1 l2 = match (l1, l2) with
+  | ([], []) -> true
+  | (_, []) -> false
+  | ([], _) -> false
+  | (h1::t1, h2::t2) -> (h1 >=. h2) && (gte t1 t2)
+
+(* verify monotonicity *)
+
+lemma pos_tl x =
+  positive x && x <> [] ==> positive (List.tl x)
+[@@auto] [@@fc]
+
+lemma pos_dot_product x y =
+  positive x && positive y ==> dot_product x y >=. 0.
+[@@auto] [@@fc]
+
+lemma gte_preservation x y =
+  positive x && gte y x ==> positive y
+[@@auto] [@@fc]
+
+(* The new lemma we need over reals! *)
+
+lemma dot_product_lb w i i' =
+  positive w && gte i' i ==> dot_product w i' >=. dot_product w i
+[@@auto] [@@fc]
+
+(* Our main theorem *)
+
+theorem perceptron_monotonicity w b i i' =
+  positive w && b >=. 0. && positive i && gte i' i
+   ==>
+  perceptron'' w b i' >=. perceptron'' w b i
+[@@auto] [@@rw] [@@fc]
+
+(* A version for arbitrary thresholds *)
+
+theorem perceptron_monotonicity w b i i' k =
+  positive w && b >=. 0. && positive i && gte i' i
+   ==>
+  perceptron''' k w b i' >=. perceptron''' k w b i
+[@@auto] [@@rw] [@@fc]
+;;
+
+(* Many-neuron networks *)
+
+let rec layer ws bs i = match (ws, bs) with
+  | (_, []) | ([], _) -> []
+  | (w::ws, b::bs) -> (perceptron' w b i) :: (layer ws bs i) 
+
+let rec positive_2d l = match l with
+  | [] -> true
+  | h::t -> (positive h) && (positive_2d t)
+
+lemma pos_tl_2d x =
+  positive_2d x && x <> [] ==> positive_2d (List.tl x)
+[@@auto] [@@fc]
+
+theorem layer_monotonicity ws bs i i' =
+  positive_2d ws && positive bs && positive i && gte i' i
+     ==>
+  gte (layer ws bs i') (layer ws bs i)
+[@@auto] [@@rw]
+
+let rec positive_3d l = match l with
+  | [] -> true
+  | h::t -> (positive_2d h) && (positive_3d t)
+
+let rec network ws bs i = match (ws, bs) with
+  | (_, []) | ([], _) -> i
+  | (w::ws, b::bs) -> network ws bs (layer w b i)
+
+lemma positive_push_2d bs ws i =
+  positive bs
+  && positive_2d ws
+  && positive i
+     ==>
+  positive (layer ws bs i)
+[@@auto] [@@rw]
+
+theorem network_monotonicity ws bs i i' =
+  positive_3d ws && positive_2d bs && positive i && gte i' i
+    ==>
+  gte (network ws bs i') (network ws bs i)
+[@@auto]
+
+let rec layer ws bs i = match (ws, bs) with
+  | (_, []) | ([], _) -> []
+  | (w::ws, b::bs) -> (perceptron' w b i) :: (layer ws bs i) 
+
+let rec positive_2d l = match l with
+  | [] -> true
+  | h::t -> (positive h) && (positive_2d t)
+
+lemma pos_tl_2d x =
+  positive_2d x && x <> [] ==> positive_2d (List.tl x)
+[@@auto] [@@fc]
+
+theorem layer_monotonicity ws bs i i' =
+  positive_2d ws && positive bs && positive i && gte i' i
+    ==> 
+  gte (layer ws bs i') (layer ws bs i)
+[@@auto]
+
+(* let rec positive_3d l = match l with
+  | [] -> true
+  | h::t -> (positive_2d h) && (positive_3d t)
+
+let rec network ws bs i = match (ws, bs) with
+  | (_, []) | ([], _) -> i
+  | (w::ws, b::bs) -> network ws bs (layer w b i) 
+
+lemma pos_tl_3d x =
+  positive_3d x && x <> [] ==> positive_3d (List.tl x)
+[@@auto] [@@fc]
+
+lemma pos_composition f g x y =
+  positive x && gte y x &&
+  gte y x ==> gte (f y) (f x) &&
+  gte y x ==> gte (g y) (g x)
+    ==>
+  positive (g (f y))
+[@@auto][@@fc]
+  
+lemma chain_monotonicity w w' b b' i i' = 
+  let layer0 = layer w b in
+  let layer1 = layer w' b' in
+  positive i && gte i' i && 
+  positive_2d w  && positive b && 
+  positive_2d w' && positive b'
+    ==>
+  gte (layer1 (layer0 i')) (layer1 (layer0 i))
+[@@auto] [@@fc] *)
+
+(* theorem network_monotonicity ws bs i i' =
+  positive_3d ws && positive_2d bs && positive i && gte i' i
+    ==>
+  gte (network ws bs i') (network ws bs i)
+[@@auto] *)

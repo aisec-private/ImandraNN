@@ -1,0 +1,59 @@
+(* 
+let () = System.use("matrix.iml")
+let () = System.use("fully_connected.iml")
+let () = System.use("acas_xu.iml")
+ *)
+
+let relu x = if x < 0 then 0 else x;;
+
+let fc = FC.fc
+
+let layer0 = fc relu Weights.layer0
+let layer1 = fc relu Weights.layer1
+let layer2 = fc relu Weights.layer2
+let layer3 = fc relu Weights.layer3
+let layer4 = fc relu Weights.layer4
+let layer5 = fc relu Weights.layer5
+let layer6 = fc (fun x -> x) Weights.layer6
+
+let (>>=) = Res.bind
+
+(* 
+(i) ρ: Distance from ownship to intruder; 
+(ii) θ: Angle to intruder relative to ownship heading direction; 
+(iii) ψ: Heading angle of intruder relative to ownship heading direction; 
+(iv) vown: Speed of ownship; 
+(v) vint: Speed of intruder; 
+(vi) τ: Time until loss of vertical separation;
+(vii) aprev: Previous advisory. 
+*)
+
+
+(* 
+Property phi_1:
+– Description: If the intruder is distant and is significantly slower than the ownship, the score of a COC advisory will always be below a certain fixed threshold.
+– Tested on: all 45 networks.
+– Input constraints: ρ ≥ 55947.691, vown ≥ 1145, vint ≤ 60.
+– Desired output property: the score for COC is at most 1500. 
+*)
+
+let (<=?) = Res.lte
+
+let is_valid input = match input with
+  | (dist::angle::angle_int::vown::vint::[]) -> -3 <= angle && angle <= 3 &&    (* angles are in [-pi, pi] *)
+                                            -3 <= angle_int && angle_int <= 3 &&
+                                            dist >= 0 && vown >= 0 (* speed and distances are positive *)
+  | _ -> false
+
+let model input = layer0 input >>= layer1 >>= layer2 >>= layer3 >>= layer4 >>= layer5 >>= layer6
+
+let condition1 input = match input with 
+  | (dist::angle::angle_int::vown::vint::[]) -> 
+      (dist <= 55948) && (vown >= 1145) && (vint <= 60)
+  | _ -> false
+
+let property1 input = let output = model input in
+  let coc = Res.flatten (Res.map (Vec.nth 0) output) in
+  coc <=? 1500
+
+verify (fun x -> is_valid x && condition1 x ==> property1 x) [@@blast]

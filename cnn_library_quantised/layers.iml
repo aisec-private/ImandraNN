@@ -1,0 +1,29 @@
+(*
+let () = System.use "matrix.iml";;
+let () = System.use "convolution.iml";;
+let () = System.use "max_pool.iml";;
+let () = System.use "fully_connected.iml";;
+*)
+
+module Layer = struct
+    let max_pool pool_size (input: Z.t Matrix.matrix list) = 
+        Res.extract_list (List.map (Max_pool.max_pool pool_size) input)
+
+
+    let convolution (filters: Z.t Matrix.matrix list list) (input: Z.t Matrix.matrix list) =
+        Res.extract_list (List.map (Convolution.conv_channels input) filters)
+
+
+    let rec flatten' input i = 
+        if i < 0 then Ok [] else
+        (Res.lift2 List.append) (flatten' input (i - 1)) (Matrix.column i input)
+
+
+    let flatten (input: Z.t Matrix.matrix list) = 
+        let flat_input = List.map Matrix.flatten input in
+        let (rows, cols) = Matrix.dimensions flat_input in
+        flatten' flat_input (cols - 1)
+
+
+    let fc = FC.fc
+end

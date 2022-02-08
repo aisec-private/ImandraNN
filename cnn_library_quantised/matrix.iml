@@ -1,0 +1,245 @@
+type 'a vector = 'a list;;
+type 'a matrix = 'a vector list;;
+
+
+(* bad util function to print dimensions *)
+let i_to_s' i = 
+    if i = 0 then "0" else 
+    if i = 1 then "1" else
+    if i = 2 then "2" else
+    if i = 3 then "3" else
+    if i = 4 then "4" else
+    if i = 5 then "5" else
+    if i = 6 then "6" else
+    if i = 7 then "7" else
+    if i = 8 then "8" else
+    if i = 9 then "9" else
+    "many"
+
+let rec i_to_s'' i = if i <= 9 then i_to_s' i else
+    i_to_s'' (i / 10) ^ i_to_s' (i mod 10)
+
+let i_to_s _ = ""
+
+(* let i_to_s i = Z.to_string i [@@program];; *)
+
+(* Module Res implements monadic functions for built-in ('a, 'b) result type *)
+module Res = struct
+    let map (f: 'a -> 'b) (x: ('a, 'c) result) = match x with
+        | Ok x' -> Ok (f x')
+        | Error msg -> Error msg
+
+    let bind (x: ('a, 'b) result) (f: 'a -> ('c, 'd) result) = match x with 
+        | Ok x' -> f x'
+        | Error msg -> Error msg
+
+    let bind2 (x: ('a, 'b) result) (y: ('c, 'd) result) (f: 'a -> 'c -> ('e, 'f) result) = match x with 
+        | Ok x' -> (fun y -> match y with 
+            | Ok y' -> f x' y'
+            | Error msg -> Error msg) y
+        | Error msg -> Error msg
+
+    let flatten = function
+        | Error msg -> Error msg
+        | Ok (Ok x) -> Ok x
+        | Ok (Error msg) -> Error msg
+
+    let rec extract_list l = match l with   (* sig: ('a, 'b) result list -> ('a list, 'b) result *)
+        | [] -> Ok []
+        | (Ok x)::tail -> bind (extract_list tail) (fun tl -> Ok (x::tl))
+        | (Error msg)::tail -> Error msg
+
+    let lift (f: 'a -> 'r) (a: ('a, 'b) result) = match a with
+        | Ok a' -> Ok (f a')
+        | Error msg -> Error msg
+
+    let lift2 (f: 'a -> 'b -> 'r) (a: ('a, 'd) result) (b: ('b, 'd) result) = match (a, b) with
+        | (Ok a', Ok b') -> Ok (f a' b')
+        | (Error msg, _) -> Error msg
+        | (_, Error msg) -> Error msg
+
+    let is_err = function 
+        | Error _ -> true
+        | _ -> false
+
+    let is_ok = function 
+        | Error _ -> false
+        | _ -> true
+
+    let lte res eps = match res with
+        | Ok res' -> res' <= eps
+        | Error _ -> false
+
+    let gte res eps = match res with
+        | Ok res' -> res' >= eps
+        | Error _ -> false
+end
+
+(* List functions *)
+module Vec = struct
+    type 'a vector = 'a list
+
+    let hd = function
+        | (x::xs) -> Ok x
+        | _ -> Error "hd: empty list"
+
+    let tl = function 
+        | (x::xs) -> Ok xs
+        | _ -> Error "tl: empty list"
+
+    let rec map2 (f: 'a -> 'b -> 'c) (x: 'a vector) (y: 'b vector) = match x with
+        | [] -> (fun y -> match y with                  (* use of anonymous function otherwise Syntax error *)
+            | [] -> Ok []
+            | y::ys  -> Error "map2: invalid list length.") y 
+        | x::xs -> match y with 
+            | [] -> Error "map2: invalid list length."
+            | y::ys -> let tail = map2 f xs ys in
+                let hd = f x y in
+                Res.bind tail (fun tl -> Ok (hd::tl))
+
+    let sum (v: Z.t vector) = List.fold_left ( + ) 0 v;;
+
+    let sub_vector v n l =
+        if n < 0 || l < 0 then Error "sub_vector: negative length" else
+        if n + l > List.length v then Error "sub_vector: index out of range" else
+        if l = 0 then Ok [] else
+        let acc_fun = fun (i, xs) x -> if n <= i && i < (n + l) then (i + 1, x::xs) else (i + 1, xs) in
+        let (_, sub_v) = List.fold_left acc_fun (0, []) v in
+        Ok (List.rev sub_v)
+
+    let nth i list = match List.nth i list with
+        | None -> Error "nth: index out of range"
+        | Some x -> Ok x
+
+    let max' a b = if a > b then a else b
+
+    let max v = List.fold_left max' 0 v
+
+    let l0 a b = let c = map2 (fun c d -> if c = d then 0 else 1) a b in
+        Res.map sum c
+end
+
+module Matrix = struct
+    type 'a matrix = 'a vector list
+
+    let rec is_valid' (m:'a matrix) l = match m with 
+        | [] -> true
+        | (hd::tl) -> List.length hd = l && is_valid' tl l
+
+    (* checks if all rows are of same length *)
+    let is_valid (m:'a matrix) = match m with
+        | [[]] -> true
+        | (hd::[]) -> true
+        | (hd::_) -> is_valid' m (List.length hd)
+        | _ -> false
+
+    let rec map f m = match m with
+        | [] -> Ok []
+        | h::t -> let tl = map f t in
+            Res.bind tl (fun a -> Ok ((List.map f h)::a))
+
+    let rec map2 (f: 'a -> 'b -> 'c) (x: 'a matrix) (y: 'b matrix) = match x with
+        | [] -> (fun y -> match y with
+            | [] -> Ok []
+            | y::ys  -> Error "map2: invalid list length.") y (* use of anonymous function otherwise Syntax error *)
+        | x::xs -> match y with 
+            | [] -> Error "map2: invalid list length." 
+            | y::ys -> let hd = Vec.map2 f x y in
+                let tl = map2 f xs ys in
+                Res.bind2 hd tl (fun a b -> Ok (a::b))
+
+    let sum (m: Z.t matrix) = Vec.sum (List.map Vec.sum m);;
+
+    let max m = Vec.max (List.map Vec.max m);;
+
+    let dimensions m = if m = [] 
+                   then (0, 0)
+                   else let rows = List.length m in
+                        let col_lens = List.map List.length m in
+                        let cols = Vec.max col_lens in
+                        (rows, cols)
+
+    let sub_matrix (m:'a matrix) (row, col) (h, w) = 
+        let (m_rows, m_cols) = dimensions m in
+        if  row + w > m_rows || col + h > m_cols then Error "sub_matrix: index out of range" else
+        let acc_fun (i, vs) v = if row <= i && i < (row + h) 
+            then (i + 1, Res.bind2 (Vec.sub_vector v col w) vs (fun x y -> Ok (x::y))) 
+            else (i + 1, vs) in
+        let (_, sub_m) = List.fold_left acc_fun (0, Ok []) m in
+        Res.map List.rev sub_m
+
+    let dot_product (a:Z.t matrix) (b:Z.t matrix) =
+        let c = map2 ( * ) a b in
+        Res.map sum c
+    
+
+    let add (m1: Z.t matrix) (m2: Z.t matrix) =
+        map2 ( + ) m1 m2
+
+    let empty = function
+        | [] | [[]] -> true
+        | _ -> false
+
+    let rec column idx (m: 'a matrix) = 
+        let (rs, cs) = dimensions m in
+        if idx >= cs && m <> [] then Error ("column: index out of range: " ^ (i_to_s idx) ^ " cols: " ^ (i_to_s cs)) else
+        match m with
+            | [] -> Ok []
+            | (hd::tl) -> let head = Vec.nth idx hd in
+                let tail = column idx tl in
+                Res.bind2 head tail (fun hd tl -> Ok (hd::tl))
+
+    let rec flatten = function 
+        | (hd::tl) -> hd @ (flatten tl)
+        | [] -> []
+    ;;            
+
+    let nth (row, col) m = let r = Vec.nth row m in
+        Res.bind r (fun x -> Vec.nth col x)
+
+    let l0 m1 m2 =
+        let diff = fun a b -> if a = b then 0 else 1 in
+        let m3 = map2 diff m1 m2 in
+        Res.map sum m3
+end
+
+let rec div' x y r =
+    if y <= 0 then Error "invalid division" else
+    if x < y then Ok r
+    else div' (x - y) y (r + 1)
+    ;;
+
+let div x y = 
+    if y = 0 then Error "division by 0" else
+    let x' = abs x in
+    let y' = abs y in
+    div' x' y' 0
+;;
+
+let (//) = div;;
+
+
+(* 
+instance (fun x -> Matrix.map2 (fun x y -> (x  + y)) [[1; 2; 3];[4; 5; 6]] x = Ok [[2;3;4];[5;6;7]]);; (* ??? *)
+instance (fun x -> (Matrix.map2 (+) x [[1.;1.;1.];[1.;1.;1.]]) = Ok [[2.;3.;4.];[5.;6.;7.]]);; 
+*)
+
+
+(*
+
+(* Printing functions *)
+
+let rec print_vector' l = match l with
+| [] -> ""
+| (h::t) -> String.concat "; " [(Printf.sprintf "%8.4f" h); (print_vector' t)]
+[@@program];;
+
+let print_vector l = Printf.printf "[ %s ]\n" (print_vector' l) [@@program];;
+
+let rec iter f = function
+    | [] -> ()
+    | (h::t) -> f h; iter f t
+    [@@program];;
+
+let print_matrix l = iter print_vector l [@@program];;
+*)

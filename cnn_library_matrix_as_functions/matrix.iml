@@ -1,0 +1,127 @@
+module Matrix = struct
+
+  type arg =
+    | Rows
+    | Cols
+    | Value of int * int
+
+  type 'a t = arg -> 'a
+
+  let nth (m: 'a t) (i: int) (j: int) : 'a = m (Value (i,j))
+
+  let rows (m: 'a t) : int = m Rows
+
+  let cols (m: 'a t) : int = m Cols
+
+  let sub_matrix (m: 'a t) (row, col: int * int) (height, width: int * int) : 'a t =
+    function
+    | Rows -> height
+    | Cols -> width
+    | Value (i,j) -> m (Value (i+row, j+col))
+
+  let rec fold_rec f cols i j (m: 'a t) =
+    let dec i j =
+      if j <= 0 then (i-1,cols) else (i,j-1)
+    in
+    if i <= 0 && j <= 0 then (
+      m (Value (i,j))
+    ) else (
+      let i',j' = dec i j in
+      f (m (Value (i,j))) (fold_rec f cols i' j' m)
+    )
+  [@@adm i,j]
+
+  let fold (f : 'a -> 'b -> 'b) (m: 'a t) : 'b =
+    let rows = m Rows - 1 in
+    let cols = m Cols - 1 in
+    fold_rec f cols rows cols m
+
+  let sum = fold (+)
+
+  let max = fold max
+
+  let min = fold min
+
+  let transpose (m: 'a t) : 'a t =
+    function
+    | Rows -> m Cols
+    | Cols -> m Rows
+    | Value (i,j) -> m (Value (j,i))
+
+  let diagonal size =
+    function
+    | Rows -> size
+    | Cols -> size
+    | Value (i,j) ->
+      if i=j then 1 else 0
+
+  let map (f: 'a -> 'b) (m: 'a t) : 'b t =
+    function
+    | Rows -> rows m
+    | Cols -> cols m
+    | Value (i,j) -> f (m (Value (i,j)))
+
+  let map2 (f: 'a -> 'b -> 'c) (m: 'a t) (m': 'b t) : 'c t =
+    function
+    | Rows -> rows m
+    | Cols -> cols m
+    | Value (i,j) -> f (m (Value (i,j))) (m' (Value (i,j)))
+
+  let dot_product m m' =
+    sum (map2 ( * ) m m')
+
+  let flatten m = function
+    | Rows -> 1
+    | Cols -> (rows m) * (cols m)
+    | Value (i,j) -> nth m ((rows m) / j) ((rows m) mod j)
+
+  let nth_row m n = function
+    | Rows -> 1
+    | Cols -> cols m
+    | Value (0, j) -> nth m n j
+    | Value _ -> 0
+
+  let l0 m m' =
+    let diff = fun a b -> if a = b then 0 else 1 in
+    sum (map2 diff m m')
+
+  (* Construct a matrix from a sparse list representation *)
+  let of_sparse_list rows cols xs =
+    function
+    | Rows -> rows
+    | Cols -> cols
+    | Value (i,j) ->
+      match List.assoc (i,j) xs with
+      | Some x -> x
+      | None -> 0
+
+  let of_list_list rows cols xs =
+    function
+    | Rows -> rows
+    | Cols -> cols
+    | Value (i, j) ->
+      begin match List.nth i xs with
+      | None -> 0
+      | Some xs' ->
+        begin match List.nth j xs' with
+          | None -> 0
+          | Some x -> x
+        end
+      end
+
+  (* Sparse representation as a list of non-zero located values *)
+  let to_list (m:'a t) =
+    let out = ref [] in
+    let record (i,j) x = out := ((Z.of_int i, Z.of_int j), x) :: !out in
+    for i = 0i to Z.to_int (m Rows - 1) do
+      for j = 0i to Z.to_int (m Cols - 1) do
+        let v = m (Value (Z.of_int i, Z.of_int j)) in
+        if v <> 0 then (
+          record (i,j) v
+        )
+      done
+    done;
+    !out
+  [@@program]
+
+end

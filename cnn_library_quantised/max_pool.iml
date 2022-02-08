@@ -1,0 +1,77 @@
+(* let () = System.use "matrix.iml";; *)
+
+module Max_pool = struct 
+    let rec max_pool_row input pool_size (row, col) =
+        let (_, pool_cols) = pool_size in
+        if col < 0 || pool_cols <= 0 then Ok [] else
+        let m = Matrix.sub_matrix input (row, col) pool_size in
+        let head = Res.map Matrix.sum m in
+        (* let head = Res.map Matrix.max m in *)
+        let tail = max_pool_row input pool_size (row, col - pool_cols) in
+        Res.bind2 head tail (fun hd tl -> Ok (tl @ [hd]))
+    ;;
+
+    let rec max_pool_loop input (pool_rows, pool_cols) row =
+        let (i_rows, i_cols) = Matrix.dimensions input in
+        if row < 0 || pool_rows <= 0 then Ok [] else (* pool_rows <= 0 for loop termination -> would be more elegant with refinement types *)
+        let pool_nb = i_cols // pool_cols in
+        match pool_nb with
+            | Error msg -> Error msg
+            | Ok nb -> let col = pool_cols * (nb - 1) in
+                let head = max_pool_row input (pool_rows, pool_cols) (row, col) in
+                let tail = max_pool_loop input (pool_rows, pool_cols) (row - pool_rows) in
+                (Res.lift2 List.cons) head tail
+    ;;
+
+    let max_pool' input (pool_rows, pool_cols) = (* todo: add stride, padding for more flexibility *)
+        let (i_rows, _) = Matrix.dimensions input in
+        if i_rows < pool_rows then Ok [] else
+        let pool_nb = i_rows // pool_rows in
+        match pool_nb with
+            | Error msg -> Error msg
+            | Ok nb -> let row = pool_rows * (nb - 1) in
+                max_pool_loop input (pool_rows, pool_cols) row
+    ;;
+
+    let max_pool pool_size input = Res.map List.rev (max_pool' input pool_size)
+end
+
+
+let test_mp = [
+    [1; 2 ; 3 ; 4];
+    [1; 2 ; 3 ; 4];
+    [1; 2 ; 3 ; 4];
+    [1; 2 ; 3 ; 9];
+    [1; 2 ; 3 ; 9];
+];;
+
+(* result of max_pool (2, 2) test_mp *)
+let res_mp = [[2;4];[2;9]];;
+
+
+
+(* smallest test possible *)
+let test_mp' = [
+    [1; 2];
+    [3; 4]
+];;
+
+(* result of max_pool (1, 1) test_mp' *)
+let res_mp' = [
+    [1; 2];
+    [3; 4]
+];;
+
+
+
+Max_pool.max_pool (2, 2) test_mp;;
+
+let (<=?) = Res.lte;;
+let (>>=) = Res.bind;;
+
+let property x = 
+    let mp = Max_pool.max_pool (2, 2) x in
+    Matrix.is_valid x && Matrix.l0 x test_mp <=? 1 ==> mp >>= (Matrix.l0 res_mp') <=? 1
+;;
+
+(* verify property [@@blast];; *)

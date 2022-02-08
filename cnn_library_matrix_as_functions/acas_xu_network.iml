@@ -1,0 +1,94 @@
+(* let () = System.use("matrix.iml") *)
+let () = System.use("fully_connected.iml")
+(* let () = System.use("layers.iml") *)
+(* let () = System.use("./acas_xu/networks_iml/acas_xu_sparse_1_1.iml") *)
+(* 
+(i) ρ: Distance from ownship to intruder; 
+(ii) θ: Angle to intruder relative to ownship heading direction; 
+(iii) ψ: Heading angle of intruder relative to ownship heading direction; 
+(iv) vown: Speed of ownship; 
+(v) vint: Speed of intruder; 
+(vi) τ: Time until loss of vertical separation;
+(vii) aprev: Previous advisory. 
+*)
+
+(* 
+Property phi_1:
+– Description: If the intruder is distant and is significantly slower than the ownship, the score of a COC advisory will always be below a certain fixed threshold.
+– Tested on: all 45 networks.
+– Input constraints: ρ ≥ 55947.691, vown ≥ 1145, vint ≤ 60.
+– Desired output property: the score for COC is at most 1500. 
+*)
+
+let is_valid (dist, angle, angle_int, vown, vint) =
+  -3 <= angle && angle <= 3 &&        (* angles are in [-pi, pi] *)
+  -3 <= angle_int && angle_int <= 3 &&
+  dist >= 0 && vown >= 0 && vint >= 0 (* speed and distances are positive *)
+
+let condition1 (dist, angle, angle_int, vown, vint) =
+  (dist >= 55948) && (vown >= 1145) && (vint <= 60)
+
+let mk_input (dist, angle, angle_int, vown, vint) =
+  let open Matrix in
+  function
+  | Rows -> 1
+  | Cols -> 5
+  | Value (0,0) -> dist
+  | Value (0,1) -> angle
+  | Value (0,2) -> angle_int
+  | Value (0,3) -> vown
+  | Value (0,4) -> vint
+  | _ -> 0
+
+let run (dist, angle, angle_int, vown, vint) =
+  let m = mk_input (dist, angle, angle_int, vown, vint) in
+  layer0 m |> layer1 |> layer2 |> layer3 |> layer4 |> layer5 |> layer6
+;;
+
+let property1 x =
+  let output = run x in
+  let coc = Matrix.nth output 0 0 in
+  coc <= 1500
+;;
+
+let property2 x =
+  let output = run x in
+  let g i j = output (Value (i,j)) in
+  let coc = g 0 0 in
+  let weak_left = g 0 1 in
+  let weak_right = g 0 2 in
+  let strong_left = g 0 3 in
+  let strong_right = g 0 4 in
+  (weak_left >= coc
+   || weak_right >= coc
+   || strong_left >= coc
+   || strong_right >= coc)
+;;
+
+(* We prove characterizing forward-chaining rules about `relu`,
+   and then we disable it for all of the proofs. This way,
+   `relu` induces no simplification case-splits, while all
+   relevant information about `relu` values is propagated,
+   per instance, on demand to our simplification context. *)
+
+lemma relu_pos x =
+  x >= 0 ==> (relu x) [@trigger] = x
+[@@auto] [@@fc]
+;;
+
+lemma relu_neg x =
+  x <= 0 ==> (relu x) [@trigger] = 0
+[@@auto] [@@fc]
+;;
+
+#disable relu;;
+
+theorem acas_xu_phi_1 x =
+  is_valid x && condition1 x ==> property1 x
+[@@auto]
+;;
+
+theorem acas_xu_phi_2 x =
+  is_valid x && condition1 x ==> property2 x
+[@@auto]
+;;

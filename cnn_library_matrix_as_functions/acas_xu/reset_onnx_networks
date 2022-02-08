@@ -1,0 +1,6 @@
+#! /bin/bash
+
+rm -rf networks_onnx
+mkdir networks_onnx
+cp -r ~/source/AcasXu/networks/onnx/ACASXU_run2a_*.onnx ./networks_onnx
+

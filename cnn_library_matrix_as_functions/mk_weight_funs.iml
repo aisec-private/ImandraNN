@@ -1,0 +1,30 @@
+(* Make first-class matrix functions from lists *)
+
+let rec to_fun_rec xs =
+  match xs with
+  | [] -> "Map.const 0\n"
+  | ((i,j),x)::xs ->
+    let s = CCFormat.sprintf "Map.add (%a,%a) (%a) @@@@ \n"
+        Z.pp_print i Z.pp_print j Z.pp_print x in
+    s ^ (to_fun_rec xs)
+[@@program]
+
+let to_fun xs = to_fun_rec @@ List.rev xs [@@program]
+
+(*
+   print_string @@ to_fun (Matrix.to_list (Matrix.of_list_list 50 6 Weights.layer0));;
+
+   print_string @@ to_fun (Matrix.to_list (Matrix.of_list_list 50 51 Weights.layer1));;
+
+   print_string @@ to_fun (Matrix.to_list (Matrix.of_list_list 50 51 Weights.layer2));;
+
+   print_string @@ to_fun (Matrix.to_list (Matrix.of_list_list 50 51 Weights.layer3));;
+
+   print_string @@ to_fun (Matrix.to_list (Matrix.of_list_list 50 51 Weights.layer4));;
+
+   print_string @@ to_fun (Matrix.to_list (Matrix.of_list_list 50 51 Weights.layer5));;
+
+   print_string @@ to_fun (Matrix.to_list (Matrix.of_list_list 5 51 Weights.layer6));;
+
+*)
+

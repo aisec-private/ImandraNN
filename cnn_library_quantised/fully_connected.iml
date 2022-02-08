@@ -1,0 +1,15 @@
+(* let () = System.use "matrix.iml";; *)
+
+
+module FC = struct
+    let activation f w i =
+        let linear_combination m1 m2 = if (List.length m1) <> (List.length m2) then Error  ("m1: " ^(i_to_s' @@ List.length m1)  ^ " m2: " ^(i_to_s' @@ List.length m2)) else
+            Res.map Vec.sum (Vec.map2 ( * ) m1 m2) in
+        let i' = 1::i in (* add 1 for bias *)
+        let z = linear_combination w i' in
+        Res.map f z
+
+    let rec fc f (weights:Z.t Matrix.matrix) (input:Z.t Vec.vector) = match weights with
+        | [] -> Ok []
+        | w::ws -> Res.bind2 (activation f w input) (fc f ws input) (fun hd tl -> Ok (hd::tl))
+end

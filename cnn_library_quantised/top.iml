@@ -1,0 +1,86 @@
+let () = System.use "matrix.iml";;
+let () = System.use "convolution.iml";;
+let () = System.use "max_pool.iml";;
+let () = System.use "fully_connected.iml";;
+let () = System.use "layers.iml";;
+let () = System.use "weights_acc_1.iml";;
+let () = System.use "robustness.iml"
+
+
+let pp_approx fmt r = CCFormat.fprintf fmt "%s" (Real.to_string_approx r) [@@program]
+#install_printer pp_approx
+
+
+let (>>=) = Res.bind
+
+let layer_0 = Layer.convolution Weights.layer0
+
+let layer_1 = Layer.max_pool (2, 2)
+
+let layer_2 = Layer.flatten
+
+(* layer3 is a dropout layer, no need to represent it here *)
+
+let layer_4 = Layer.fc (fun x -> x) Weights.layer4
+
+let process_output (output: Z.t list) = match output with
+    | fst::(snd::[]) -> if fst < snd then Ok "Sad" else Ok "Happy"
+    | _ -> Error "error"
+;;
+
+let model_raw input = layer_0 input >>= layer_1 >>= layer_2 >>= layer_4 ;;
+
+let model input = layer_0 input >>= layer_1 >>= layer_2 >>= layer_4 >>= process_output;;
+
+let input_happy = [
+    [
+        [ 1; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 1; 0; 0; 0; 1; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 1; 0; 0; 0; 1; 0; 0];
+        [ 0; 0; 0; 1; 1; 1; 0; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+    ]
+];;
+
+let input_sad = [
+    [
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 1; 0; 0; 0; 1; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 0; 1; 1; 1; 0; 0; 0];
+        [ 0; 0; 1; 0; 0; 0; 1; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+        [ 0; 0; 0; 0; 0; 0; 0; 0; 0];
+    ]
+];;
+
+let input = input_happy
+
+let epsilon = 1
+
+(* checks if the given matrix's elements are binary *)
+let is_binary m = let m' = Matrix.map (fun x -> x = 0 || x = 1) m in
+    let fold_true x = List.fold_left (&&) true x in
+    m' >>= (fun x -> Ok (fold_true (List.map fold_true x)))
+
+let is_valid x = match x with 
+    | x::[] -> Matrix.is_valid x && Matrix.dimensions x = (9, 9) && is_binary x = (Ok true)
+    | _ -> false
+
+(* verify classification robustness *)
+verify (fun x -> Robustness.cr model input "Happy" epsilon ~constrnt:(is_valid x) x) [@@blast]
+
+(* verify standard robustness *)
+verify (fun x -> Robustness.sr model_raw input 1 epsilon ~constrnt:(is_valid x) x) [@@blast]
+
+(* verify Lipschitz robustness *)
+verify (fun x -> Robustness.lr model_raw input 1 epsilon ~constrnt:(is_valid x) x) [@@blast]
+
+(* verify approximate classification robustness *)
+verify (fun x -> Robustness.acr model_raw input 1 1 epsilon ~constrnt:(is_valid x) x) [@@blast]

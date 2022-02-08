@@ -1,0 +1,287 @@
+let () = System.use "matrix.iml";;
+let () = System.use "convolution.iml";;
+let () = System.use "max_pool.iml";;
+let () = System.use "fully_connected.iml";;
+let () = System.use "layers.iml";;
+(* let () = System.use "weights_diagonal_filters.iml";; *)
+let () = System.use "weights_acc_1.iml";;
+
+let filters = [
+  [
+    [-0.60558426; -1.2217668];
+    [ 0.8740414;  -0.4001516 ];
+  ];
+  [
+    [ 1.2206709;   0.17149502];
+    [-0.41619384; -0.00449648];
+  ]
+];;
+
+let pp_approx fmt r = CCFormat.fprintf fmt "%s" (Real.to_string_approx r) [@@program]
+#install_printer pp_approx
+
+
+let sad_test = [
+  [
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 1.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 1.0; 1.0; 1.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+  ]
+]
+
+let happy_test = [
+  [
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 1.0; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 1.0; 0.0];
+    [ 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 1.0; 1.0; 1.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+  ]
+];;
+
+let invalid_happy_test = [
+  [
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 1.0; ];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; ];
+    [ 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 1.0; 0.0; ];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; ];
+    [ 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 1.0; 0.0; ];
+    [ 0.0; 0.0; 1.0; 1.0; 1.0; 1.0; 1.0; 0.0; 0.0; ];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; ];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; ];
+    [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; ];
+  ];
+]
+
+
+let (>>=) = Res.bind
+
+let layer_0 = Layer.convolution layer0
+
+let layer_1 = Layer.max_pool (2, 2)
+
+let model input = layer_0 input >>= layer_1
+
+
+let is_approx a b delta = let abs x = if x <. 0. then (-1. *. x) else x in 
+  Res.lift2 (fun a' b' -> abs(a' -. b') <=. delta) a b;;
+
+let lt x y = Res.bind2 x y (fun a b -> Ok (a <. b));;
+let (<?) = lt;;
+
+let res_or x y = Res.bind2 x y (fun a b -> Ok (a || b));;
+let (||?) = res_or;;
+
+let res_and x y = Res.bind2 x y (fun a b -> Ok (a && b));;
+let (&&?) = res_and;;
+
+(* functions to test patterns on 2x2 matrices *)
+
+(* check if there is a diagonal from top left to bottom right *)
+let is_left_diagonal m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  let delta = 0.1 in
+  if is_valid && (is_approx tl br delta) &&? (bl <? tl) &&? (tr <? tl) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+(* check if there is a diagonal from top right to bottom left *)
+let is_right_diagonal m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  let delta = 0.1 in
+  if is_valid && (is_approx tr bl delta) &&? (br <? tr) &&? (tl <? tr) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+let is_diagonal m = 
+  (is_left_diagonal m) ||? (is_right_diagonal m)
+;;
+
+(* check if there is a vertical line on the left of the square *)
+let is_left_vertical m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  let delta = 0.1 in
+  if is_valid && (is_approx tl bl delta) &&? (tr <? tl) &&? (br <? tl) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+(* check if there is a horizontal line at the bottom of square *)
+let is_bottom_horizontal m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  let delta = 0.1 in
+  let lt x y = Res.bind2 x y (fun a b -> Ok (a <. b)) in
+  if is_valid && (is_approx bl br delta) &&? (tl <? bl) &&? (tr <? bl) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+(* check if there is a horizontal line at the top of square *)
+let is_top_horizontal m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  let delta = 0.1 in
+  let lt x y = Res.bind2 x y (fun a b -> Ok (a <. b)) in
+  if is_valid && (is_approx tl tr delta) &&? (br <? tl) &&? (br <? tr) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+(* check if the top left corner is higher *)
+let is_tl_corner m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  if is_valid && (bl <? tl) &&? (tr <? tl) &&? (br <? tl) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+(* check if the top right corner is higher *)
+let is_tr_corner m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  if is_valid && (bl <? tr) &&? (tl <? tr) &&? (br <? tr) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+(* check if the bottom left corner is higher *)
+let is_bl_corner m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  if is_valid && (tl <? bl) &&? (tr <? bl) &&? (br <? bl) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+let is_bl_angle m = 
+  let is_valid = Matrix.dimensions m =  (2, 2) in
+  let tl = Matrix.nth (0, 0) m in
+  let tr = Matrix.nth (0, 1) m in
+  let bl = Matrix.nth (1, 0) m in
+  let br = Matrix.nth (1, 1) m in
+  let delta = 0.1 in
+  if is_valid && (is_approx bl tl delta) &&? (is_approx br bl delta) &&? (tr <? bl) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+(* function to check if the filter has matched at least once in the given region (for binary filters) *)
+let at_least_one_match value filter =
+  let is_valid = Matrix.dimensions filter =  (2, 2) in
+  let matched x = x >>= (fun x -> Ok (x = value)) in
+  let tl = Matrix.nth (0, 0) filter in
+  let tr = Matrix.nth (0, 1) filter in
+  let bl = Matrix.nth (1, 0) filter in
+  let br = Matrix.nth (1, 1) filter in
+  if is_valid && (matched tl) ||? (matched tr) ||? (matched bl) ||? (matched br) = (Ok true)
+      then (Ok true)
+      else (Ok false)
+;;
+
+let happy_properties (l: (real Matrix.matrix list)) = 
+  let f1 = Vec.hd l in
+  let f1' = Matrix.sub_matrix f1 (2, 0) (2, 2) in
+  let left_vertical = f1' >>= is_left_vertical in
+  let bottom_horizontal = f1' >>= is_bottom_horizontal in
+  let left_diagonal = f1' >>= is_left_diagonal in
+  let tl_corner = f1' >>= is_tl_corner in
+  let bl_angle = f1' >>= is_bl_angle in
+  left_vertical ||? bottom_horizontal ||? left_diagonal ||? tl_corner ||? bl_angle
+;;
+
+let sad_properties (l: (real Matrix.matrix list)) = 
+  let f2 = Vec.nth 1 l in
+  let f2' = f2 >>= (fun x -> Matrix.sub_matrix x (2, 0) (2, 2)) in
+  let bl_corner = f2' >>= is_bl_corner in
+  let top_horizontal = f2' >>= is_top_horizontal in
+  bl_corner ||? top_horizontal
+;;
+
+let happy_binary_properties l =
+  let f1 = Vec.nth 0 l in
+  let f2 = Vec.nth 1 l in
+  (* bottom left corner of output for filter 1 *)
+  let f1' = f1 >>= (fun x -> Matrix.sub_matrix x (2, 0) (2, 2)) in
+  (* bottom right corner of output for filter 2 *)
+  let f2' = f2 >>= (fun x -> Matrix.sub_matrix x (2, 2) (2, 2)) in
+  let bl = f1' >>= (at_least_one_match 2.) in
+  let br = f2' >>= (at_least_one_match 2.) in
+  bl &&? br
+;;
+
+let sad_binary_properties l = 
+  let f1 = Vec.nth 0 l in
+  let f2 = Vec.nth 1 l in
+  (* bottom right corner of output for filter 1 *)
+  let f1' = f1 >>= (fun x -> Matrix.sub_matrix x (2, 2) (2, 2)) in
+  (* bottom left corner of output for filter 2 *)
+  let f2' = f2 >>= (fun x -> Matrix.sub_matrix x (2, 0) (2, 2)) in
+  let bl = f1' >>= (at_least_one_match 2.) in
+  let br = f2' >>= (at_least_one_match 2.) in
+  bl &&? br
+;;
+
+let accumulation_fn check_fn (i, l) m = 
+  let pool_output = model [m] in
+  let res = pool_output >>= check_fn in
+  if res = (Ok true) then (i + 1, l) else (i + 1, i::l)
+
+let check_inputs l check_fn = 
+  let (i, res) = List.fold_left (accumulation_fn check_fn) (0, []) l in
+  List.rev res
+
+(*  
+[
+  [
+    [0.;0.;0.;0.499322921];
+    [0.499322921;0.;0.;0.499322921];
+    [0.499322921;0.278773427;0.278773427;0.];
+    [0.;0.;0.;0.]
+  ];
+  [
+    [0.780436039;0.;0.;0.780436039];[0.780436039;0.;0.;0.780436039];
+    [0.860315532;0.894929916;0.894929916;0.079879493];[0.;0.;0.;0.]
+  ]
+]
+ *)

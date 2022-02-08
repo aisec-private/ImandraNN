@@ -1,0 +1,17 @@
+(* let () = System.use "matrix.iml" *)
+
+module FC = struct
+  let add_weight_coeff m = function
+    | Matrix.Rows         -> Matrix.rows m
+    | Matrix.Cols         -> Matrix.cols m + 1
+    | Matrix.Value (i, 0) -> 1
+    | Matrix.Value (i, j) -> Matrix.nth m i (j - 1)
+
+  let fc (f: 'a -> 'b) (weights: 'a Matrix.t) (input: 'a Matrix.t) = function
+    | Matrix.Rows         -> 1
+    | Matrix.Cols         -> Matrix.rows weights
+    | Matrix.Value (0, j) -> let input' = add_weight_coeff input in
+        let weights_row = Matrix.nth_row weights j in
+        f (Matrix.dot_product weights_row input')
+    | Matrix.Value _      -> 0
+end

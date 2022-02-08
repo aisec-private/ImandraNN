@@ -1,0 +1,63 @@
+(* Status: ALL PROVED. *)
+
+(*
+
+We want to prove that for a perceptron with positive weights and positive inputs,
+if the input increases, the output will increase as well
+
+*)
+
+let rec dot_product l1 l2 =
+  match (l1, l2) with
+    | ([], _) | (_, []) -> 0
+    | (h1::t1, h2::t2) -> (h1 * h2) + (dot_product t1 t2)
+
+(* 
+  f = activation function
+  w = weights
+  i = inputs
+*)
+let perceptron f w b i = let z = b + dot_product w i in
+  f z
+
+let thresh t x = if x >= t then x else 0
+
+[@@@redef true]
+let id x = x
+[@@@redef false]
+
+let perceptron' = perceptron id
+
+let perceptron'' = perceptron (thresh 1)
+
+let rec positive l = match l with
+  | [] -> true
+  | h::t -> h >= 0 && (positive t)
+
+
+(* lexicographically comparing 2 lists *)
+let rec gte l1 l2 = match (l1, l2) with
+  | ([], []) -> true
+  | (_, []) -> false
+  | ([], _) -> false
+  | (h1::t1, h2::t2) -> (h1 >= h2) && (gte t1 t2)
+
+let increasing f x y = x >= y ==> (f x) >= f(y)
+
+lemma pos_tl x =
+  positive x && x <> [] ==> positive (List.tl x)
+[@@auto] [@@fc]
+
+lemma pos_dot_product x y =
+  positive x && positive y ==> dot_product x y >= 0
+[@@auto] [@@fc]
+
+lemma gte_preservation x y =
+  positive x && gte y x ==> positive y
+[@@auto] [@@fc]
+
+theorem perceptron_monotonicity w b i i' =
+  positive w && b >= 0 && positive i && gte i' i
+  ==>
+  (perceptron'' w b i') >= (perceptron'' w b i)
+[@@auto]
