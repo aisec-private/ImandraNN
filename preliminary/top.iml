@@ -1,0 +1,48 @@
+let () = System.use "matrix.iml";;
+
+let () = System.use "fully_connected.iml";;
+
+module Weights = struct
+  let layer0 = [[1.0023211; 1.1538234; -0.30127743; 0.9319558; 2.179688]]
+
+  let layer1 = [[0.81521773; -2.651993]; [0.27192873; -0.83343804]; [-1.21521; -0.27463955]]
+end
+
+let relu x = 
+    if x <. 0. 
+    then 0. 
+    else x
+;;
+
+let layer0 = FC.fc relu Weights.layer0
+
+let layer1 = FC.fc (fun x -> x) Weights.layer1
+
+let argmax x = match x with
+  | (c0::c1::c2::[]) ->   if (c0 >=. c1) && (c0 >=. c2) then Ok "setosa"
+      else if (c1 >=. c0) && (c1 >=. c2) then Ok "versicolor"
+      else Ok "virginica"
+  | _ -> Error "invalid output size"
+
+let (>>=) = Res.bind
+
+let model input = layer0 input >>= layer1 >>= argmax
+
+let is_valid input = match input with 
+  | (sl::sw::pl::pw::[]) ->  -3. <=. sl && sl <=. 3. &&
+      -3. <=. sw && sw <=. 3. &&
+      -3. <=. pl && pl <=. 3. &&
+      -3. <=. pw && pw <=. 3.
+  | _ -> false
+
+let distance x y = let abs a = if a >. 0. then a else (-1.) *. a in
+  let diff = Vec.map2 (fun a b -> abs (a -. b)) x y in
+  Res.map Vec.sum diff
+
+let (<=?) = Res.lte
+
+let epsilon = 0.2
+
+let input = [0.31099753;-0.59237301; 0.53540856; 0.00087755]
+
+verify (fun x -> is_valid x && (distance x input) <=? epsilon ==> model x = Ok "versicolor")

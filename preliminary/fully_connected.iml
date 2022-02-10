@@ -1,0 +1,16 @@
+(* let () = System.use "matrix.iml";; *)
+
+
+module FC = struct
+    let activation f(*activation function*) w(*eights*) i(*nput*) =
+        let linear_combination m1 m2 = if (List.length m1) <> (List.length m2) 
+            then Error  ("m1: " ^(i_to_s @@ List.length m1)  ^ " m2: " ^(i_to_s @@ List.length m2)) 
+            else Res.map Vec.sum (Vec.map2 ( *. ) m1 m2) in
+        let i' = 1.::i in (* add 1. for bias *)
+        let z = linear_combination w i' in
+        Res.map f z
+
+    let rec fc f (weights:real Matrix.matrix) (input:real Vec.vector) = match weights with
+        | [] -> Ok []
+        | w::ws -> Res.lift2 List.cons (activation f w input) (fc f ws input)
+end

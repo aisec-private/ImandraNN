@@ -1,0 +1,67 @@
+type iris_input = {
+  sepal_len: real;
+  sepal_width: real;
+  petal_len: real;
+  petal_width: real;
+}
+
+let process_iris_input (x: iris_input) =
+  let f0 = x.sepal_len in
+  let f1 = x.sepal_width in
+  let f2 = x.petal_len in
+  let f3 = x.petal_width in
+  (f0, f1, f2, f3);;
+
+let relu x = 
+    if x <. 0. 
+    then 0. 
+    else x
+;;
+
+let layer_0 (w0, w1, w2, w3, w4) (f1, f2, f3, f4) =
+  relu (w0 +. w1 *. f1 +. w2 *.f2 +. w3 *. f3 +. w4 *. f4)
+
+let layer_1 (w0, w1, w2, w3, w4, w5) f1 =
+  let o1 = w0 *. f1 +. w1 in
+  let o2 = w2 *. f1 +. w3 in
+  let o3 = w4 *. f1 +. w5 in
+  (o1, o2, o3);;
+
+let process_iris_output (c0, c1, c2) =
+  if (c0 >=. c1) && (c0 >=. c2) then "setosa"
+  else if (c1 >=. c0) && (c1 >=. c2) then "versicolor"
+  else "virginica"
+  
+let weights_0 = (1.0023211, 1.1538234, -0.30127743, 0.9319558, 2.179688)
+
+let weights_1 = (-2.651993, 0.81521773, -0.83343804,  0.27192873, -0.27463955,  -1.21521)
+
+let model input = process_iris_input input |> layer_0 weights_0 |> layer_1 weights_1 |> process_iris_output;;
+
+(* Example with a versicolor instance, normalized input *)
+let input = {
+  sepal_len = 0.31099753;
+  sepal_width = -0.59237301;
+  petal_len = 0.53540856;
+  petal_width = 0.00087755;
+};;
+
+model input
+
+let is_valid input =
+  -3. <=. input.sepal_len && input.sepal_len <=. 3. &&
+  -3. <=. input.sepal_width && input.sepal_width <=. 3. &&
+  -3. <=. input.petal_len && input.petal_len <=. 3. &&
+  -3. <=. input.petal_width && input.petal_width <=. 3.
+
+let abs x = if x <. 0. then (-1.) *. x else x
+
+let distance x y =
+  abs (x.sepal_len -. y.sepal_len) +. abs (x.sepal_width -. y.sepal_width) +. 
+    abs (x.petal_len -. y.petal_len) +. abs (x.petal_width -. y.petal_width)
+
+let epsilon = 0.2
+
+verify (fun x -> is_valid x
+        && distance x input <=. epsilon
+        ==> model x = "versicolor")
