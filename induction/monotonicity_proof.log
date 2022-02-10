@@ -1,0 +1,85 @@
+val network_monotonicity :
+  real vector vector vector ->
+  real vector vector -> real vector -> real vector -> bool = <fun>
+Goal:
+
+positive_3d ws && positive_2d bs && positive i && gte i' i
+==> gte (network ws bs i') (network ws bs i).
+
+1 nontautological subgoal.
+
+Subgoal 1:
+
+ H0. positive_3d ws
+ H1. positive_2d bs
+ H2. positive i
+ H3. gte i' i
+|---------------------------------------------------------------------------
+ gte (network ws bs i') (network ws bs i)
+
+Must try induction.
+
+The recursive terms in the conjecture suggest 6 inductions.
+Subsumption and merging reduces this to 2.
+
+However, scheme scoring gives us a clear winner.
+We shall induct according to a scheme derived from network.
+
+Induction scheme:
+
+ (not (ws <> [] && bs <> []) ==> phi bs i i' ws)
+ && (bs <> []
+     && ws <> []
+        && phi (List.tl bs) (layer (List.hd ws) (List.hd bs) i)
+           (layer (List.hd ws) (List.hd bs) i') (List.tl ws)
+     ==> phi bs i i' ws).
+
+2 nontautological subgoals.
+
+Subgoal 1.2:
+
+ H0. positive_3d ws
+ H1. positive_2d bs
+ H2. positive i
+ H3. gte i' i
+|---------------------------------------------------------------------------
+ C0. ws <> [] && bs <> []
+ C1. gte (network ws bs i') (network ws bs i)
+
+But simplification reduces this to true, using the definition of network.
+
+Subgoal 1.1:
+
+ H0. positive_3d ws
+ H1. positive_2d bs
+ H2. positive i
+ H3. gte i' i
+ H4. bs <> []
+ H5. ws <> []
+ H6. ((positive_3d (List.tl ws) && positive_2d (List.tl bs))
+      && positive (layer (List.hd ws) (List.hd bs) i))
+     && gte (layer (List.hd ws) (List.hd bs) i')
+        (layer (List.hd ws) (List.hd bs) i)
+     ==> gte
+         (network (List.tl ws) (List.tl bs)
+          (layer (List.hd ws) (List.hd bs) i'))
+         (network (List.tl ws) (List.tl bs)
+          (layer (List.hd ws) (List.hd bs) i))
+|---------------------------------------------------------------------------
+ gte (network ws bs i') (network ws bs i)
+
+But simplification reduces this to true, using the definitions of network,
+positive_2d and positive_3d, and the rewrite rules layer_monotonicity and
+positive_push_2d.
+
+    Rules:
+    (:def network)
+    (:def positive_2d)
+    (:def positive_3d)
+    (:rw layer_monotonicity)
+    (:rw positive_push_2d)
+    (:fc gte_preservation)
+    (:fc pos_tl_2d)
+    (:induct network)
+
+    Theorem proved.
