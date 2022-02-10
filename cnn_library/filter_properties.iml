@@ -66,7 +66,7 @@ let invalid_happy_test = [
 
 let (>>=) = Res.bind
 
-let layer_0 = Layer.convolution layer0
+let layer_0 = Layer.convolution Weights.layer0
 
 let layer_1 = Layer.max_pool (2, 2)
 
@@ -267,21 +267,19 @@ let accumulation_fn check_fn (i, l) m =
   let res = pool_output >>= check_fn in
   if res = (Ok true) then (i + 1, l) else (i + 1, i::l)
 
+
+(* 
+Check if the property defined in check_fn applies to the inputs in l 
+Returns a list of the indices of l's elements for which check_fn holds.
+*)
 let check_inputs l check_fn = 
   let (i, res) = List.fold_left (accumulation_fn check_fn) (0, []) l in
   List.rev res
 
-(*  
-[
-  [
-    [0.;0.;0.;0.499322921];
-    [0.499322921;0.;0.;0.499322921];
-    [0.499322921;0.278773427;0.278773427;0.];
-    [0.;0.;0.;0.]
-  ];
-  [
-    [0.780436039;0.;0.;0.780436039];[0.780436039;0.;0.;0.780436039];
-    [0.860315532;0.894929916;0.894929916;0.079879493];[0.;0.;0.;0.]
-  ]
-]
- *)
+(* 
+e.g.: 
+
+let () = System.use "training_set_happy.iml";;
+
+check_inputs happy_inputs happy_binary_properties;;
+*)

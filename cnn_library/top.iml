@@ -48,19 +48,11 @@ let input = [
 model_raw input;;
 model input;;
 
-(* instance (fun x -> Matrix.is_valid x && model x = Ok "Happy") *)
-
+(* 
 let epsilon = 1.
 
 let (<=?) = Res.lte
 
 (* verify classification robustness *)
-verify (fun x -> Matrix.is_valid x && (Matrix.l0 input x <=? epsilon) = true ==> model x = Ok "Sad")
-
-(* let convolution_property x = 
-    let epsilon = 1. in
-    let conv_result = Convolution.convolution x filter in
-    let result_distance = conv_result >>= (Matrix.l0 res') in
-    Matrix.l0 x test <=? 1. ==> result_distance <=? 1. 
-
-verify convolution_property;; *)
+verify (fun x -> Matrix.is_valid x && (Matrix.l0 input x <=? epsilon) = true ==> model x = Ok "Sad") 
+*)
