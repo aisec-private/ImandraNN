@@ -14,12 +14,12 @@ The code is separated into 6 parts:
 * `cnn_library_quantised`:
   - the quantised version of the previous library, necessary to use Imandra's Blast strategy (Section 4).
   - the implementation of multiple definitions of robustness (Section 4), and the evaluation of these multiple definitions.
-  - the evaluation against an ACAS Xu benchmark model (Section 5).
 
 * `cnn_library_matrix_as_function`:
   - the formalisation of Neural networks with Matrix as defined as functions as described in Section 5.
+  - the verification of a property on a quantised model from the ACAS-Xu benchmark
 
-* `ìnduction`:
+* `induction`:
   - the proof of properties on perceptrons by induction reasoning (Section 6).
 
 * `notebooks`: 
