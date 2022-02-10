@@ -150,24 +150,6 @@ lemma pos_tl_3d x =
   positive_3d x && x <> [] ==> positive_3d (List.tl x)
 [@@auto] [@@fc]
 
-lemma pos_composition f g x y =
-  positive x && gte y x &&
-  gte y x ==> gte (f y) (f x) &&
-  gte y x ==> gte (g y) (g x)
-    ==>
-  positive (g (f y))
-[@@auto][@@fc]
-  
-lemma chain_monotonicity w w' b b' i i' = 
-  let layer0 = layer w b in
-  let layer1 = layer w' b' in
-  positive i && gte i' i && 
-  positive_2d w  && positive b && 
-  positive_2d w' && positive b'
-    ==>
-  gte (layer1 (layer0 i')) (layer1 (layer0 i))
-[@@auto] [@@fc]
-
 lemma positive_push_2d bs ws i =
   positive bs
   && positive_2d ws

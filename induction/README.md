@@ -4,19 +4,12 @@
 
 This folder shows examples of proofs by induction on perceptrons (Section 6).
 
-`matrix.iml` contains the implementation of matrices as functions as described in Section 5.
+`top.iml` contains defintions of perceptrons and feed-forward networks. They are then used to prove monotonicity of networks with positive weights by induction. 
 
-`fully_connected.iml`, `layers.iml` and `top.iml` show the definition of fully-connected layers and their assembly into a feed-forward network.
-
-In addition, `acas_xu_network.iml` shows the definition of a network from the ACAS-Xu benchmark and the verification of one of its properties.
-
-`mk_weights_funs.iml` and the `acas_xu` subfolders contain the definitions of the ACAS-Xu networks in the `nnet` format and the scripts used for their conversion to the IML matrices-as-functions form.
-
-The `weights_#*.iml` file contain the values for the weights used in the files described above.
+The interaction cycle for the proof of monotonicity is given in `monotonicity_proof.log`.
 
 ## Usage
 
 ```
-#redef;;
 #use "top.iml";;
 ```

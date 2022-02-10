@@ -82,12 +82,12 @@ lemma relu_neg x =
 
 #disable relu;;
 
-(* theorem acas_xu_phi_1 x =
+theorem acas_xu_phi_1 x =
   is_valid x && condition1 x ==> property1 x
 [@@auto]
-;; *)
+;;
 
-(* theorem acas_xu_phi_2 x =
+theorem acas_xu_phi_2 x =
   is_valid x && condition1 x ==> property2 x
 [@@auto]
-;; *)
+;;
