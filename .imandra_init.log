@@ -1,0 +1,103 @@
+- : unit = ()
+Findlib has been successfully loaded. Additional directives:
+  #require "package";;      to load a package
+  #list;;                   to list the available packages
+  #camlp4o;;                to load camlp4 (standard syntax)
+  #camlp4r;;                to load camlp4 (revised syntax)
+  #predicates "p,q,...";;   to set these predicates
+  Topfind.reset();;         to force that packages will be reloaded
+  #thread;;                 to enable threads
+
+- : unit = ()
+/usr/local/var/imandra/_opam/lib/easy-format: added to search path
+/usr/local/var/imandra/_opam/lib/biniou: added to search path
+/usr/local/var/imandra/_opam/lib/yojson: added to search path
+/usr/local/var/imandra/_opam/lib/containers/monomorphic: added to search path
+/usr/local/var/imandra/_opam/lib/either: added to search path
+/usr/local/var/imandra/_opam/lib/seq: added to search path
+/usr/local/var/imandra/_opam/lib/containers: added to search path
+/usr/local/var/imandra/_opam/lib/zarith: added to search path
+/usr/local/var/imandra/_opam/lib/stdlib-shims: added to search path
+/usr/local/var/imandra/_opam/lib/ocamlgraph: added to search path
+/usr/local/var/imandra/_opam/lib/bytes: added to search path
+/usr/local/var/imandra/_opam/lib/mtime: added to search path
+/usr/local/var/imandra/_opam/lib/mtime/clock/os: added to search path
+/usr/local/var/imandra/_opam/lib/catapult: added to search path
+/usr/local/var/imandra/_opam/lib/ocplib-endian: added to search path
+/usr/local/var/imandra/_opam/lib/cbor: added to search path
+/usr/local/var/imandra/_opam/lib/cbor-pack: added to search path
+/usr/local/var/imandra/_opam/lib/containers-thread: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-document: added to search path
+/usr/local/var/imandra/_opam/lib/logs: added to search path
+/usr/local/var/imandra/_opam/lib/pp_loc: added to search path
+/usr/local/var/imandra/_opam/lib/result: added to search path
+/usr/local/var/imandra/_opam/lib/ppx_deriving/runtime: added to search path
+/usr/local/var/imandra/_opam/lib/ptime: added to search path
+/usr/local/var/imandra/_opam/lib/ptime/clock/os: added to search path
+/usr/local/var/imandra/_opam/lib/sha: added to search path
+/usr/local/var/imandra/_opam/lib/ocaml/threads: added to search path
+/usr/local/var/imandra/_opam/lib/uuidm: added to search path
+/usr/local/var/imandra/_opam/lib/zip: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-util: added to search path
+/usr/local/var/imandra/_opam/lib/containers-data: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-surface: added to search path
+/usr/local/var/imandra/_opam/lib/ocaml/compiler-libs: added to search path
+/usr/local/var/imandra/_opam/lib/menhirLib: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-syntax: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-core-stub: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-base-prelude: added to search path
+/usr/local/var/imandra/_opam/lib/catapult/utils: added to search path
+/usr/local/var/imandra/_opam/lib/stdint: added to search path
+/usr/local/var/imandra/_opam/lib/zmq: added to search path
+/usr/local/var/imandra/_opam/lib/catapult-client: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-tef: added to search path
+/usr/local/var/imandra/_opam/lib/iter: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-fol: added to search path
+/usr/local/var/imandra/_opam/lib/curly: added to search path
+/usr/local/var/imandra/_opam/lib/findlib: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-base/codegen: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-base/protocol: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-base/thread-util: added to search path
+/usr/local/var/imandra/_opam/lib/octavius: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-document/octavius: added to search path
+/usr/local/var/imandra/_opam/lib/reason/easy_format: added to search path
+/usr/local/var/imandra/_opam/lib/ppx_derivers: added to search path
+/usr/local/var/imandra/_opam/lib/reason/ocaml-migrate-parsetree: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-reason-parser: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-syntax-reason: added to search path
+/usr/local/var/imandra/_opam/lib/linenoise: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-base/interactive: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-client/lib: added to search path
+/usr/local/var/imandra/_opam/lib/re: added to search path
+/usr/local/var/imandra/_opam/lib/re/re.cma: loaded
+/usr/local/var/imandra/_opam/lib/uutf: added to search path
+/usr/local/var/imandra/_opam/lib/uutf/uutf.cma: loaded
+/usr/local/var/imandra/_opam/lib/tyxml/functor: added to search path
+/usr/local/var/imandra/_opam/lib/tyxml/functor/tyxml_f.cma: loaded
+/usr/local/var/imandra/_opam/lib/tyxml: added to search path
+/usr/local/var/imandra/_opam/lib/tyxml/tyxml.cma: loaded
+/usr/local/var/imandra/_opam/lib/imandra-document/tyxml: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-document/tyxml/imandra_document_tyxml.cma: loaded
+/usr/local/var/imandra/_opam/lib/csv: added to search path
+/usr/local/var/imandra/_opam/lib/csv/csv.cma: loaded
+/usr/local/var/imandra/_opam/lib/decoders: added to search path
+/usr/local/var/imandra/_opam/lib/decoders/decoders.cma: loaded
+/usr/local/var/imandra/_opam/lib/decoders-yojson: added to search path
+/usr/local/var/imandra/_opam/lib/decoders-yojson/decoders_yojson.cma: loaded
+/usr/local/var/imandra/_opam/lib/gsl: added to search path
+/usr/local/var/imandra/_opam/lib/gsl/gsl.cma: loaded
+/usr/local/var/imandra/_opam/lib/imandra-tools-ast: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-tools-ast/imandra_tools_ast.cma: loaded
+/usr/local/var/imandra/_opam/lib/pbrt: added to search path
+/usr/local/var/imandra/_opam/lib/pbrt/pbrt.cma: loaded
+/usr/local/var/imandra/_opam/lib/ocaml-protoc: added to search path
+/usr/local/var/imandra/_opam/lib/ocaml-protoc/ocaml_protoc.cma: loaded
+/usr/local/var/imandra/_opam/lib/opentelemetry: added to search path
+/usr/local/var/imandra/_opam/lib/opentelemetry/opentelemetry.cma: loaded
+/usr/local/var/imandra/_opam/lib/imandra-tools: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-tools/imandra_tools.cma: loaded
+/usr/local/var/imandra/_opam/lib/jupyter-imandra: added to search path
+/usr/local/var/imandra/_opam/lib/jupyter-imandra/jupyter_imandra.cma: loaded
+/usr/local/var/imandra/_opam/lib/imandra-voronoi: added to search path
+/usr/local/var/imandra/_opam/lib/imandra-voronoi/imandra_voronoi.cma: loaded
+- : unit = ()

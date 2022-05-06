@@ -1,0 +1,109 @@
+module Matrix = struct
+    type 'a t = {
+        rows: int;
+        cols: int;
+        vals: ((int*int), 'a) Map.t;
+    }
+
+    let of_list rows cols list =
+        {
+            rows = rows;
+            cols = cols;
+            vals = Map.of_list 0. list;
+        }
+
+    let nth (m: 'a t) ((i,j): int*int) : 'a = Map.get (i,j) m.vals
+
+    let rec map_rec (m: 'a t) (f: 'a -> 'b) (cols: int) (i:int) (j:int) (res: ((int*int), 'b) Map.t) =
+        let dec i j = 
+            if j <= 0 then (i-1, cols) else (i,j-1)     
+        in
+        if i <= 0 && j <= 0 then (
+            Map.add' res (i,j) @@ f (nth m (i,j))
+        ) else (
+            let (i',j') = dec i j in
+            let res' = Map.add' res (i',j') @@ f (nth m (i',j')) in
+            map_rec m f cols i' j' res'
+        )
+    [@@adm i,j]
+
+    let map (f: 'a -> 'b) (m: 'a t): 'b t =
+        let rows = m.rows - 1 in
+        let cols = m.cols in
+        let vals = map_rec m f rows cols cols (Map.const 0.) in  
+        {
+            rows = m.rows; 
+            cols = m.cols; 
+            vals = vals;
+        }
+
+    let rec map2_rec 
+            (m: 'a t) 
+            (m': 'b t) 
+            (f: 'a -> 'b -> 'c) 
+            (cols: int) 
+            (i: int) 
+            (j: int) 
+            (res: ((int*int), 'c) Map.t): 
+            ((int*int), 'c) Map.t =
+        let dec i j = 
+            if j <= 0 then (i-1, cols) else (i,j-1)     
+        in
+        if i <= 0 && j <= 0 then (
+            res
+            (* Map.add' res (i,j) @@ f (nth m (i,j)) (nth m' (i,j)) *)
+        ) else (
+            let (i',j') = dec i j in
+            let new_value = f (nth m (i',j')) (nth m' (i', j')) in
+            let res' = Map.add' res (i',j') new_value in
+            map2_rec m m' f cols i' j' res'
+        )
+    [@@adm i,j]
+
+    let map2 (f: 'a -> 'b -> 'c) (m: 'a t) (m': 'b t) : 'c t = 
+        let rows = max (m.rows) (m'.rows) in
+        let cols = max (m.cols) (m'.cols) in
+        let vals = map2_rec m m' f cols rows cols (Map.const 0.) in
+        {
+            rows = rows;
+            cols = cols;
+            vals = vals;
+        }
+
+    let rec fold_rec f cols i j (m: 'a t) =
+        let dec i j =
+            if j <= 0 then (i-1,cols) else (i,j-1)
+        in
+        if i <= 0 && j <= 0 then (
+            nth m (i,j) 
+        ) else (
+            let i',j' = dec i j in
+            f  (nth m (i,j)) (fold_rec f cols i' j' m)
+        )
+    [@@adm i,j]
+
+    let fold (f: 'a -> 'b -> 'b) (m: 'a t) : 'b = 
+        let rows = m.rows in
+        let cols = m.cols in
+        fold_rec f cols rows cols m
+
+    let sum m = fold (+.) m
+
+    let dot_product m m' = fold (+.) @@ map2 ( *. ) m m';; 
+
+    let rec nth_row_rec (m: 'a t) (n: int) (j: int): ((int*int), 'a) Map.t =
+        if j <= 0 then (
+            Map.add (0, j) (nth m (n, j)) (Map.const 0.)
+        ) else (
+            Map.add (0, j) (nth m (n, j)) (nth_row_rec m n (j-1))  
+        )
+
+    let nth_row (m: 'a t) (n: int) : 'a t = 
+        let vals = nth_row_rec m n m.cols in
+        {
+            rows = 1;
+            cols = m.cols;
+            vals = vals;
+        }
+
+end
