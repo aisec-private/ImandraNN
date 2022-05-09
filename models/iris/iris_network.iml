@@ -1,0 +1,60 @@
+let () = System.use "../matrix.iml";;
+let () = System.use "../fully_connected.iml";;
+
+let mk_input (f0, f1, f2, f3) = 
+    let open Matrix in
+    function
+    | Rows -> Int 1
+    | Cols -> Int 4
+    | Value (0, 0) -> Val (f0 /. 0.6811222222222222 -. 5.843333333333335) (* scale input *)
+    | Value (0, 1) -> Val (f1  /. 0.1887128888888887 -. 3.057333333333334)
+    | Value (0, 2) -> Val (f2  /. 3.0955026666666674 -. 3.7580000000000027) 
+    | Value (0, 3) -> Val (f3  /. 0.5771328888888888 -. 1.199333333333334)
+    | Value (_, _) -> Val 0.
+
+
+let layer0_map = 
+    Map.add (0,0) 0.16047218441963196 @@
+    Map.add (0,1) (-0.2537785768508911) @@
+    Map.add (1,0) 0.2571267783641815 @@
+    Map.add (1,1) (-0.574664831161499) @@
+    Map.add (2,0) (-0.060425952076911926) @@
+    Map.add (2,1) (-0.1822526901960373) @@
+    Map.add (3,0) 1.3556100130081177 @@
+    Map.add (3,1) 1.2753090858459473 @@
+    Map.add (4,0) 1.0114716291427612 @@
+    Map.add (4,1) (-0.10977821052074432) @@
+    Map.const 0.
+
+
+let layer0 = FC.fc FC.relu (
+    function
+        Rows -> Int 2
+        | Cols -> Int 5
+        | Value (i,j) -> Val (Map.get (i,j) layer0_map)
+    )
+
+
+let layer1_map = 
+    Map.add (0,0) 0.6704747676849365 @@
+    Map.add (0,1) 0.4511740803718567 @@
+    Map.add (0,2) (-1.375389814376831) @@
+    Map.add (1,0) (-2.24886417388916) @@
+    Map.add (1,1) (-0.27835142612457275) @@
+    Map.add (1,2) 0.9744452834129333 @@
+    Map.add (2,0) (-1.0865917205810547) @@
+    Map.add (2,1) (-0.2750999331474304) @@
+    Map.add (2,2) 0.5887136459350586 @@ 
+    Map.const 0.
+
+let layer1 = FC.fc FC.relu (
+    function
+        Rows -> Int 3 
+        | Cols -> Int 3
+        | Value (i,j) -> Val (Map.get (i,j) layer1_map)
+    )
+
+
+let run (f0, f1, f2, f3) = 
+    let m = mk_input (f0, f1, f2, f3) in
+    layer0 m |> layer1 

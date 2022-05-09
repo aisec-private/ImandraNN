@@ -1,0 +1,33 @@
+(* let () = System.use("matrix.iml")
+let () = System.use("fully_connected.iml") *)
+let () = System.use "../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_1_batch_2000.iml"
+
+(* 
+(i) ρ: Distance from ownship to intruder; 
+(ii) θ: Angle to intruder relative to ownship heading direction; 
+(iii) ψ: Heading angle of intruder relative to ownship heading direction; 
+(iv) vown: Speed of ownship; 
+(v) vint: Speed of intruder; 
+(vi) τ: Time until loss of vertical separation;
+(vii) aprev: Previous advisory. 
+*)
+
+
+let mk_input (dist, angle, angle_int, vown, vint) : 'a Matrix.t =
+  let open Matrix in
+  function
+  | Rows -> 1.
+  | Cols -> 5.
+  | Value (0.,0.) -> dist
+  | Value (0.,1.) -> angle
+  | Value (0.,2.) -> angle_int
+  | Value (0.,3.) -> vown
+  | Value (0.,4.) -> vint
+  | _ -> 0.
+
+let run (dist, angle, angle_int, vown, vint) =
+  let open Weights in
+  let m = mk_input (dist, angle, angle_int, vown, vint) in
+  layer0 m |> layer1 |> layer2 |> layer3 |> layer4 |> layer5 |> layer6
+;;
+

@@ -1,0 +1,14 @@
+let () = System.use "acas_xu_network.iml";;
+(* let () = System.use "acas_xu_properties.iml";; *)
+
+let is_valid (dist, angle, angle_int, vown, vint) =
+  -3 <= angle && angle <= 3 &&        (* angles are in [-pi, pi] *)
+  -3 <= angle_int && angle_int <= 3 &&
+  dist >= 0 && vown >= 0 && vint >= 0 (* speed and distances are positive *)
+
+(* We prove characterizing forward-chaining rules about `relu`,
+   and then we disable it for all of the proofs. This way,
+   `relu` induces no simplification case-splits, while all
+   relevant information about `relu` values is propagated,
+   per instance, on demand to our simplification context. *)
+

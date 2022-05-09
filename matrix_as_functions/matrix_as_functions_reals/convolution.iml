@@ -1,0 +1,15 @@
+(* let () = System.use "matrix.iml" *)
+
+(* convolution with 0-padding, the output of the operation has the same dimensions as the input *)
+let convolution (m : 'a Matrix.t) (f: 'a Matrix.t) = function 
+  | Matrix.Rows         -> Matrix.rows m
+  | Matrix.Cols         -> Matrix.cols m
+  | Matrix.Value (i, j) -> let sub_m = Matrix.sub_matrix m (i,j) ((Matrix.rows f), (Matrix.cols f)) in
+                           Matrix.sum (Matrix.map2 ( * ) sub_m f)
+
+(* 
+image with channels = 3d matrix
+filters = 3d matrix - will be a list of 3d matrices afterwards 
+*)
+let convolution_channels (ms: 'a Matrix.t Matrix.t) (fs: 'a Matrix.t Matrix.t) =
+  1.

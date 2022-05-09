@@ -1,0 +1,20 @@
+let () = System.use "./iris_network.iml";;
+
+let is_valid (f0, f1, f2, f3) = 
+    (0. <=. f0 && f0 <=. 10.) &&
+    (0. <=. f1 && f1 <=. 10.) &&
+    (0. <=. f2 && f2 <=. 10.) &&
+    (0. <=. f3 && f3 <=. 10.)
+
+let precondition1 (f3, f1, f2, f3) = f2 <=. 3.
+
+let postcondition1 model x =
+    let open Matrix in
+    let res = model x in
+    let setosa = to_val @@ nth res 0 0 in
+    let versicolor = to_val @@ nth res 0 1 in
+    let virginica = to_val @@ nth res 0 2 in
+    setosa >=. versicolor &&
+    setosa >=. virginica;;
+
+let property1 x = is_valid x && precondition x ==> postcondition run x;;
