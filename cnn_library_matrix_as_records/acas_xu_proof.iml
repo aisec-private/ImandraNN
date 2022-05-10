@@ -1,4 +1,4 @@
-let () = System.use "acas_xu_network.iml";;
+(* let () = System.use "acas_xu_network.iml";; *)
 
 let relu = FC.relu;;
 
@@ -11,12 +11,9 @@ let precondition1 (dist, angle, angle_int, vown, vint) =
   (dist >=. 55948.) && (vown >=. 1145.) && (vint <=. 60.)
 
 let postcondition1 output =
-  let coc = output (Matrix.Value (0., 0.)) in
+  let coc = Matrix.nth output (0,0) in
   coc <=. 1500.
 ;
-
-
-
 
 (* let postcondition2 x =
   let output = run x in

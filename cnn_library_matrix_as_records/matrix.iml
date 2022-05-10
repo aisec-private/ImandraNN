@@ -12,6 +12,13 @@ module Matrix = struct
             vals = Map.of_list 0. list;
         }
 
+    let of_map rows cols map = 
+        {
+            rows = rows;
+            cols = cols;
+            vals = map;
+        }
+
     let nth (m: 'a t) ((i,j): int*int) : 'a = Map.get (i,j) m.vals
 
     let rec map_rec (m: 'a t) (f: 'a -> 'b) (cols: int) (i:int) (j:int) (res: ((int*int), 'b) Map.t) =
