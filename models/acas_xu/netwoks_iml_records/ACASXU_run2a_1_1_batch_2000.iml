@@ -1340,7 +1340,7 @@ let layer4 = FC.fc FC.relu (
 let layer5 = FC.fc FC.relu (
     Matrix.of_map 50 51 layer5_map)
 
-    let layer6_map =
+let layer6_map =
 	Map.add (0,10) (0.05374) @@
 	Map.add (0,20) (0.05675) @@
 	Map.add (0,21) (0.06002) @@

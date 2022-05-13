@@ -1,0 +1,4 @@
+.imandra_init.log
+.vscode/
+venv/
+__pycache__/

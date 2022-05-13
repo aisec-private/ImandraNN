@@ -14,6 +14,6 @@ module FC = struct
     | Cols         -> rows weights
     | Value (0, j) -> let input' = add_weight_coeff input in
         let weights_row = nth_row weights j in
-        f (Matrix.dot_product weights_row input')
-    | Matrix.Value _      -> 0
+        f (dot_product weights_row input')
+    | Value _      -> 0
 end
