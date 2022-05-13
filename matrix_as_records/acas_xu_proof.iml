@@ -1,0 +1,96 @@
+(* let () = System.use "acas_xu_network.iml";; *)
+
+let relu = FC.relu;;
+
+let is_valid (dist, angle, angle_int, vown, vint) =
+  -3.14159 <=. angle && angle <=. 3.14159 &&        (* angles are in [-pi, pi] *)
+  -3.14159 <=. angle_int && angle_int <=. 3.14159 &&
+  dist >=. 0. && vown >=. 0. && vint >=. 0. (* speed and distances are positive *)
+
+let precondition1 (dist, angle, angle_int, vown, vint) =
+  (dist >=. 55948.) && (vown >=. 1145.) && (vint <=. 60.)
+
+let postcondition1 output =
+  let coc = Matrix.nth output (0,0) in
+  coc <=. 1500.
+;;
+
+(*
+Property φ5.
+– Description: If the intruder is near and approaching from the left, the network
+advises “strong right”.
+– Tested on: N1,1.
+– Input constraints: 250 ≤ ρ ≤ 400, 0.2 ≤ θ ≤ 0.4, −3.141592 ≤ ψ ≤
+−3.141592 + 0.005, 100 ≤ vown ≤ 400, 0 ≤ vint ≤ 400.
+– Desired output property: the score for “strong right” is the minimal score.
+*)
+
+let precondition5 (dist, angle, angle_int, vown, vint) = 
+  (250. <=. dist) && (dist <=. 400.) &&
+  (0.2 <=. angle) && (angle <=. 0.4) && 
+  (-3.141592 <=. angle_int) && (angle_int <=. (-3.141592 +. 0.005)) && 
+  (100. <=. vown) && (vown <=. 400.) &&
+  (100. <=. vint) && (vint <=. 400.)
+;; 
+
+let postcondition5 output =
+  let g i j = Matrix.nth output (i,j) in
+  let coc = g 0 0 in
+  let weak_left = g 0 1 in
+  let weak_right = g 0 2 in
+  let strong_left = g 0 3 in
+  let strong_right = g 0 4 in
+  ( strong_right <=. coc &&
+    strong_right <=. weak_left && 
+    strong_right <=. weak_right &&
+    strong_right <=. strong_left
+  )
+;;
+
+let property5 x = 
+  is_valid x && precondition5 x ==> postcondition5 (run x)
+;;
+
+
+
+(* let postcondition2 x =
+  let output = run x in
+  let g i j = Matrix.to_val @@ output (Value (i,j)) in
+  let coc = g -1 0 in
+  let weak_left = g -1 1 in
+  let weak_right = g -1 2 in
+  let strong_left = g -1 3 in
+  let strong_right = g -1 4 in
+  (weak_left >=. coc
+   || weak_right >=. coc
+   || strong_left >=. coc
+   || strong_right >=. coc)
+;; *)
+
+(* We prove characterizing forward-chaining rules about `relu`,
+   and then we disable it for all of the proofs. This way,
+   `relu` induces no simplification case-splits, while all
+   relevant information about `relu` values is propagated,
+   per instance, on demand to our simplification context. *)
+
+lemma relu_pos x =
+  x >=. 0. ==> (relu x) [@trigger] = x
+[@@auto] [@@fc]
+;;
+
+lemma relu_neg x =
+  x <=. 0. ==> (relu x) [@trigger] = 0.
+[@@auto] [@@fc]
+;;
+
+#disable relu;;
+
+(* theorem property1 x =
+  is_valid x && precondition1 x ==> postcondition1 (run x)
+[@@auto]
+;;
+
+theorem property2 x =
+  is_valid x && precondition2 x ==> postcondition2 x
+[@@auto]
+;; *)
