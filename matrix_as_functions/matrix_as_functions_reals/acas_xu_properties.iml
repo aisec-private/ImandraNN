@@ -1,36 +1,118 @@
-(* let () = System.use "acas_xu_network.iml";; *)
-
-let relu = FC.relu;;
-
 let is_valid (dist, angle, angle_int, vown, vint) =
-  -3.14159 <=. angle && angle <=. 3.14159 &&        (* angles are in [-pi, pi] *)
-  -3.14159 <=. angle_int && angle_int <=. 3.14159 &&
+  -3.141592 <=. angle && angle <=. 3.141592 &&        (* angles are in [-pi, pi] *)
+  -3.141592 <=. angle_int && angle_int <=. 3.141592 &&
   dist >=. 0. && vown >=. 0. && vint >=. 0. (* speed and distances are positive *)
 
+(* 
+Property φ1.
+– Description: If the intruder is distant and is significantly slower than the
+ownship, the score of a COC advisory will always be below a certain fixed
+threshold.
+– Tested on: all 45 networks.
+– Input constraints: ρ ≥ 55947.691, vown ≥ 1145, vint ≤ 60.
+– Desired output property: the score for COC is at most 1500.
+ *)
 let precondition1 (dist, angle, angle_int, vown, vint) =
   (dist >=. 55948.) && (vown >=. 1145.) && (vint <=. 60.)
 
-let postcondition1 output =
-  let coc = output (Matrix.Value (0., 0.)) in
+let postcondition1 x =
+  let output = run x in
+  let coc = Matrix.nth output 0. 0. in
   coc <=. 1500.
 ;;
 
+let property1 x = 
+  is_valid x && precondition1 x ==> postcondition1 x
+;;
 
+(*
+Property φ2.
+– Description: If the intruder is distant and is significantly slower than the
+ownship, the score of a COC advisory will never be maximal.
+– Tested on: Nx,y for all x ≥ 2 and for all y.
+– Input constraints: ρ ≥ 55947.691, vown ≥ 1145, vint ≤ 60.
+– Desired output property: the score for COC is not the maximal score.
+*)
 
-
-(* let postcondition2 x =
+let postcondition2 x =
   let output = run x in
-  let g i j = Matrix.to_val @@ output (Value (i,j)) in
-  let coc = g -1 0 in
-  let weak_left = g -1 1 in
-  let weak_right = g -1 2 in
-  let strong_left = g -1 3 in
-  let strong_right = g -1 4 in
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
   (weak_left >=. coc
    || weak_right >=. coc
    || strong_left >=. coc
    || strong_right >=. coc)
-;; *)
+;;
+
+let property2 x = 
+  is_valid x && precondition1 x ==> postcondition2 x
+;;
+
+(*
+Property φ3.
+– Description: If the intruder is directly ahead and is moving towards the
+ownship, the score for COC will not be minimal.
+– Tested on: all networks except N1,7, N1,8, and N1,9.
+– Input constraints: 1500 ≤ ρ ≤ 1800, −0.06 ≤ θ ≤ 0.06, ψ ≥ 3.10, vown ≥ 980,
+vint ≥ 960.
+– Desired output property: the score for COC is not the minimal score.
+*)
+
+let precondition3 (dist, angle, angle_int, vown, vint) =
+  (1500. <=. dist) && 
+  (dist <=. 1800.) && 
+  (-0.6 <=. angle && angle <=. 0.6) && 
+  (angle_int >=. 3.) &&
+  (vown >=. 980.) &&
+  (vint >=. 960.)
+;;
+
+let postcondition3 x = 
+  let output = run x in
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  (weak_left <=. coc
+   || weak_right <=. coc
+   || strong_left <=. coc
+   || strong_right <=. coc)
+;;
+
+let property3 x = 
+  is_valid x && precondition3 x ==> postcondition3 x
+;;
+
+(*
+Property φ4.
+– Description: If the intruder is directly ahead and is moving away from the
+ownship but at a lower speed than that of the ownship, the score for COC
+will not be minimal.
+– Tested on: all networks except N1,7, N1,8, and N1,9.
+– Input constraints: 1500 ≤ ρ ≤ 1800, −0.06 ≤ θ ≤ 0.06, ψ = 0, vown ≥ 1000,
+700 ≤ vint ≤ 800.
+– Desired output property: the score for COC is not the minimal score.
+*)
+
+let precondition4 (dist, angle, angle_int, vown, vint) =
+  (1500. <=. dist) && (dist <=. 1800.) && 
+  (-0.6 <=. angle && angle <=. 0.6) && 
+  (angle_int = 0.) &&
+  (vown >=. 1000.) &&
+  (700. <=. vint) && (vint <=. 800.)
+;;
+
+let postcondition4 = postcondition3;;
+
+let property4 x = 
+  is_valid x && precondition4 x ==> postcondition4 x
+;;
 
 (*
 Property φ5.
@@ -44,14 +126,15 @@ advises “strong right”.
 
 let precondition5 (dist, angle, angle_int, vown, vint) = 
   (250. <=. dist) && (dist <=. 400.) &&
-  (0.2 <=. angle) && (angle <=. 0.4) && 
-  (-3.141592 <=. angle_int) && (angle_int <=. (-3.141592 +. 0.005)) && 
+  (0.2 <=. angle && angle <=. 0.6) && 
+  (-3.141592 <=. angle_int && angle_int <=. (3.141592 +. 0.005)) && 
   (100. <=. vown) && (vown <=. 400.) &&
   (100. <=. vint) && (vint <=. 400.)
-;; 
+;;
 
-let postcondition5 output =
-  let g i j = output (Matrix.Value (i,j)) in
+let postcondition5 x =
+  let output = run x in
+  let g i j = Matrix.nth output i j in
   let coc = g 0. 0. in
   let weak_left = g 0. 1. in
   let weak_right = g 0. 2. in
@@ -65,34 +148,189 @@ let postcondition5 output =
 ;;
 
 let property5 x = 
-  is_valid x && precondition5 x ==> postcondition5 (run x)
+  is_valid x && precondition5 x ==> postcondition5 x
 ;;
 
+(*
+Property φ6.
+– Description: If the intruder is sufficiently far away, the network advises COC.
+– Tested on: N1,1.
+– Input constraints: 12000 ≤ ρ ≤ 62000, (0.7 ≤ θ ≤ 3.141592) ∨ (−3.141592 ≤
+θ ≤ −0.7), −3.141592 ≤ ψ ≤ −3.141592 + 0.005, 100 ≤ vown ≤ 1200,
+0 ≤ vint ≤ 1200.
+– Desired output property: the score for COC is the minimal score.
+*)
 
-(* We prove characterizing forward-chaining rules about `relu`,
-   and then we disable it for all of the proofs. This way,
-   `relu` induces no simplification case-splits, while all
-   relevant information about `relu` values is propagated,
-   per instance, on demand to our simplification context. *)
-
-lemma relu_pos x =
-  x >=. 0. ==> (relu x) [@trigger] = x
-[@@auto] [@@fc]
+let precondition6 (dist, angle, angle_int, vown, vint) = 
+  (12000. <=. dist) && (dist <=. 62000.) &&
+  ((-3.141592 <=. angle && angle <=. -0.7) || (0.7 <=. angle && angle <=. 3.141592)) &&   (* the condition means "intruder is *not* directly ahead" *)
+  (100. <=. vown) && (vown <=. 1200.) &&
+  (0. <=. vint) && (vint <=. 1200.)
 ;;
 
-lemma relu_neg x =
-  x <=. 0. ==> (relu x) [@trigger] = 0.
-[@@auto] [@@fc]
+let postcondition6 = postcondition3;;
+
+let property6 x = 
+  is_valid x && precondition6 x ==> postcondition6 x
 ;;
 
-#disable relu;;
+(*
+Property φ7.
+– Description: If vertical separation is large, the network will never advise a
+strong turn.
+– Tested on: N1,9.
+– Input constraints: 0 ≤ ρ ≤ 60760, −3.141592 ≤ θ ≤ 3.141592, −3.141592 ≤
+ψ ≤ 3.141592, 100 ≤ vown ≤ 1200, 0 ≤ vint ≤ 1200.
+– Desired output property: the scores for “strong right” and “strong left” are
+never the minimal scores.
+*)
 
-(* theorem property1 x =
-  is_valid x && precondition1 x ==> postcondition1 (run x)
-[@@auto]
+let precondition7 (dist, angle, angle_int, vown, vint) = 
+  (* angle conditions are checked in `is_valid` *)
+  (0. <=. dist) && (dist <=. 60760.) && 
+  (100. <=. vown) && (vown <=. 1200.) &&
+  (0. <=. vint) && (vint <=. 1200.)
+
+let postcondition7 x = 
+  let output = run x in
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  ( strong_right >. coc ||
+    strong_right >. weak_left || 
+    strong_right >. weak_right ||
+    strong_right >. strong_left
+  ) &&
+  ( strong_left >. coc ||
+    strong_left >. weak_left || 
+    strong_left >. weak_right || 
+    strong_left >. strong_right
+  )
 ;;
 
-theorem property2 x =
-  is_valid x && precondition2 x ==> postcondition2 x
-[@@auto]
-;; *)
+let property7 x = 
+  is_valid x && precondition7 x ==> postcondition7 x
+;;
+
+(*
+Property φ8.
+– Description: For a large vertical separation and a previous “weak left” advi-
+sory, the network will either output COC or continue advising “weak left”.
+– Tested on: N2,9.
+– Input constraints: 0 ≤ ρ ≤ 60760, −3.141592 ≤ θ ≤ −0.75 · 3.141592, −0.1 ≤
+ψ ≤ 0.1, 600 ≤ vown ≤ 1200, 600 ≤ vint ≤ 1200.
+– Desired output property: the score for “weak left” is minimal or the score
+for COC is minimal.
+*)
+
+let precondition8 (dist, angle, angle_int, vown, vint) = 
+  (0. <=. dist && dist <=. 60760.) &&
+  (-3.141592 <=. angle && angle <=. -0.75) &&
+  (-0.1 <=. angle_int && angle_int <=. 0.1) &&
+  (600. <=. vown && vown <=. 1200.) &&
+  (600. <=. vint && vint <=. 1200.)
+;;
+
+let postcondition8 x = 
+  let output = run x in
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  ( weak_left <=. coc &&
+    weak_left <=. strong_right && 
+    weak_left <=. weak_right &&
+    weak_left <=. strong_left
+  ) ||
+  ( weak_right <=. coc &&
+    weak_right <=. strong_right && 
+    weak_right <=. weak_left &&
+    weak_right <=. strong_left
+  )
+;;
+
+let property8 x = 
+  is_valid x && precondition8 x ==> postcondition8 x
+;;
+
+(*
+Property φ9.
+– Description: Even if the previous advisory was “weak right”, the presence of
+a nearby intruder will cause the network to output a “strong left” advisory
+instead.
+– Tested on: N3,3.
+– Input constraints: 2000 ≤ ρ ≤ 7000, −0.4 ≤ θ ≤ −0.14, −3.141592 ≤ ψ ≤
+−3.141592 + 0.01, 100 ≤ vown ≤ 150, 0 ≤ vint ≤ 150.
+– Desired output property: the score for “strong left” is minimal.
+*)
+
+let precondition9 (dist, angle, angle_int, vown, vint) =
+  (2000. <=. dist && dist <=. 7000.) &&
+  (-0.4 <=. angle && angle <=. -0.14) &&
+  (-3.141592 <=. angle_int && angle <=. (-3.141592 +. 0.01)) &&
+  (100. <=. vown && vown <=. 150.) &&
+  (0. <=. vint && vint <=. 150.)
+;;
+
+let postcondition9 x = 
+  let output = run x in
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  ( strong_left <=. coc &&
+    strong_left <=. weak_left && 
+    strong_left <=. weak_right &&
+    strong_left <=. strong_right
+  )
+;;
+
+let property9 x =
+  is_valid x && precondition9 x ==> postcondition9 x
+;;
+
+(*
+Property φ10.
+– Description: For a far away intruder, the network advises COC.
+– Tested on: N4,5.
+– Input constraints: 36000 ≤ ρ ≤ 60760, 0.7 ≤ θ ≤ 3.141592, −3.141592 ≤
+ψ ≤ −3.141592 + 0.01, 900 ≤ vown ≤ 1200, 600 ≤ vint ≤ 1200.
+– Desired output property: the score for COC is minimal.
+ *)
+
+let precondition10 (dist, angle, angle_int, vown, vint) =
+
+  (36000. <=. dist && dist <=. 60760.) && 
+  (0.7 <=. angle && angle <=. 3.141592) &&
+  (-3.141592 <=. angle_int && angle_int <=. (-3.141592 +. 0.01)) &&
+  (900. <=. vown && vown <=. 1200.) &&
+  (600. <=. vint && vint <=. 1200.)
+;;
+
+let postcondition10 x = 
+  let output = run x in
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  ( weak_left >=. coc &&
+    weak_right >=. coc &&
+    strong_left >=. coc &&
+    strong_right >=. coc
+  )
+;;
+
+let property10 x = 
+  is_valid x && precondition10 x ==> postcondition10 x;;
+
+
+  
