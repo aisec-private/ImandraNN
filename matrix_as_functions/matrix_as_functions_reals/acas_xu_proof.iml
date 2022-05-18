@@ -7,68 +7,6 @@ let is_valid (dist, angle, angle_int, vown, vint) =
   -3.14159 <=. angle_int && angle_int <=. 3.14159 &&
   dist >=. 0. && vown >=. 0. && vint >=. 0. (* speed and distances are positive *)
 
-let precondition1 (dist, angle, angle_int, vown, vint) =
-  (dist >=. 55948.) && (vown >=. 1145.) && (vint <=. 60.)
-
-let postcondition1 output =
-  let coc = output (Matrix.Value (0., 0.)) in
-  coc <=. 1500.
-;;
-
-
-
-
-(* let postcondition2 x =
-  let output = run x in
-  let g i j = Matrix.to_val @@ output (Value (i,j)) in
-  let coc = g -1 0 in
-  let weak_left = g -1 1 in
-  let weak_right = g -1 2 in
-  let strong_left = g -1 3 in
-  let strong_right = g -1 4 in
-  (weak_left >=. coc
-   || weak_right >=. coc
-   || strong_left >=. coc
-   || strong_right >=. coc)
-;; *)
-
-(*
-Property φ5.
-– Description: If the intruder is near and approaching from the left, the network
-advises “strong right”.
-– Tested on: N1,1.
-– Input constraints: 250 ≤ ρ ≤ 400, 0.2 ≤ θ ≤ 0.4, −3.141592 ≤ ψ ≤
-−3.141592 + 0.005, 100 ≤ vown ≤ 400, 0 ≤ vint ≤ 400.
-– Desired output property: the score for “strong right” is the minimal score.
-*)
-
-let precondition5 (dist, angle, angle_int, vown, vint) = 
-  (250. <=. dist) && (dist <=. 400.) &&
-  (0.2 <=. angle) && (angle <=. 0.4) && 
-  (-3.141592 <=. angle_int) && (angle_int <=. (-3.141592 +. 0.005)) && 
-  (100. <=. vown) && (vown <=. 400.) &&
-  (100. <=. vint) && (vint <=. 400.)
-;; 
-
-let postcondition5 output =
-  let g i j = output (Matrix.Value (i,j)) in
-  let coc = g 0. 0. in
-  let weak_left = g 0. 1. in
-  let weak_right = g 0. 2. in
-  let strong_left = g 0. 3. in
-  let strong_right = g 0. 4. in
-  ( strong_right <=. coc &&
-    strong_right <=. weak_left && 
-    strong_right <=. weak_right &&
-    strong_right <=. strong_left
-  )
-;;
-
-let property5 x = 
-  is_valid x && precondition5 x ==> postcondition5 (run x)
-;;
-
-
 (* We prove characterizing forward-chaining rules about `relu`,
    and then we disable it for all of the proofs. This way,
    `relu` induces no simplification case-splits, while all
@@ -87,12 +25,29 @@ lemma relu_neg x =
 
 #disable relu;;
 
-(* theorem property1 x =
-  is_valid x && precondition1 x ==> postcondition1 (run x)
-[@@auto]
+let proof property_name () = Verify.top ~hints:Hints.auto ~upto:(Logic_ast.Upto_steps 1i) property_name 
+[@@program]
 ;;
 
-theorem property2 x =
-  is_valid x && precondition2 x ==> postcondition2 x
-[@@auto]
-;; *)
+let timing f = let t = Util.ptime_now () in 
+  let ret = f () in 
+  let t' = Util.ptime_now () in 
+  ret, (Q.of_float t') -. (Q.of_float t)
+[@@program]
+;;
+
+let record_proof property_name proof_nb network_id = 
+  let res, t = timing (proof property_name) in
+  let () = Printf.printf "Verifying property %d on network %s\n" (Z.to_int proof_nb) network_id in
+  let out_path = "./timing.csv" in
+  let oc = open_out_gen [Open_append; Open_creat] (Z.to_int 0o666) out_path in
+  let res_str = match res with 
+    | Imandra_interactive.Verify.V_proved _ -> "proved"
+    | Imandra_interactive.Verify.V_proved_upto _ -> "timeout"
+    | Imandra_interactive.Verify.V_refuted _ -> "refuted"
+    | Imandra_interactive.Verify.V_unknown _ -> "unknown"
+    in
+  Printf.fprintf oc "%d;%s;%s;%f\n" (Z.to_int proof_nb) network_id res_str (Q.to_float t);
+  close_out oc;
+[@@program]
+

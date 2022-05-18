@@ -1,0 +1,50 @@
+(*
+Property φ10.
+– Description: For a far away intruder, the network advises COC.
+– Tested on: N4,5.
+– Input constraints: 36000 ≤ ρ ≤ 60760, 0.7 ≤ θ ≤ 3.141592, −3.141592 ≤
+ψ ≤ −3.141592 + 0.01, 900 ≤ vown ≤ 1200, 600 ≤ vint ≤ 1200.
+– Desired output property: the score for COC is minimal.
+ *)
+
+let precondition10 (dist, angle, angle_int, vown, vint) =
+
+  (36000 <= dist && dist <= 60760) && 
+  (angle >= 0) &&
+  (angle_int = -3) &&
+  (900 <= vown && vown <= 1200) &&
+  (600 <= vint && vint <= 1200)
+;;
+
+let postcondition10 output = 
+  let g i j = output (Matrix.Value (i,j)) in
+  let coc = g 0 0 in
+  let weak_left = g 0 1 in
+  let weak_right = g 0 2 in
+  let strong_left = g 0 3 in
+  let strong_right = g 0 4 in
+  ( weak_left >= coc &&
+    weak_right >= coc &&
+    strong_left >= coc &&
+    strong_right >= coc
+  )
+;;
+
+let property10 network x = 
+  is_valid x && precondition10 x ==> postcondition10 (network x);;
+
+
+
+(* Network 4,5 *)
+let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_5_batch_2000.iml");;
+
+let run (dist, angle, angle_int, vown, vint) =
+  let open Weights in 
+  let m = mk_input (dist, angle, angle_int, vown, vint) in
+  layer0 m |> layer1 |> layer2 |> layer3 |> layer4 |> layer5 |> layer6
+;;
+
+let property = property10 run;;
+
+let () = record_proof "property" 10 "4,5";;
+

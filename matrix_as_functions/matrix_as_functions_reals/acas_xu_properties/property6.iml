@@ -1,0 +1,48 @@
+(*
+Property φ6.
+– Description: If the intruder is sufficiently far away, the network advises COC.
+– Tested on: N1,1.
+– Input constraints: 12000 ≤ ρ ≤ 62000, (0.7 ≤ θ ≤ 3.141592) ∨ (−3.141592 ≤
+θ ≤ −0.7), −3.141592 ≤ ψ ≤ −3.141592 + 0.005, 100 ≤ vown ≤ 1200,
+0 ≤ vint ≤ 1200.
+– Desired output property: the score for COC is the minimal score.
+*)
+
+let precondition6 (dist, angle, angle_int, vown, vint) = 
+  (12000. <=. dist) && (dist <=. 62000.) &&
+  ((-3.141592 <=. angle && angle <=. -0.7) || (0.7 <=. angle && angle <=. 3.141592)) &&   (* the condition means "intruder is *not* directly ahead" *)
+  (100. <=. vown) && (vown <=. 1200.) &&
+  (0. <=. vint) && (vint <=. 1200.)
+;;
+
+let postcondition6 output = 
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  (weak_left <=. coc
+   || weak_right <=. coc
+   || strong_left <=. coc
+   || strong_right <=. coc)
+;;
+
+let property6 network x = 
+  is_valid x && precondition6 x ==> postcondition6 (network x)
+;;
+
+
+(* Network 1,1 *)
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_1_batch_2000.iml");;
+
+let run (dist, angle, angle_int, vown, vint) =
+  let open Weights in 
+  let m = mk_input (dist, angle, angle_int, vown, vint) in
+  m |> layer0 |> layer1 |> layer2 |> layer3 |> layer4 |> layer5 |> layer6
+;;
+
+let property = property6 run;;
+
+let () = record_proof "property" 6 "1,1";;
+

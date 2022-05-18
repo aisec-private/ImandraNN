@@ -1,0 +1,55 @@
+(*
+Property φ5.
+– Description: If the intruder is near and approaching from the left, the network
+advises “strong right”.
+– Tested on: N1,1.
+– Input constraints: 250 ≤ ρ ≤ 400, 0.2 ≤ θ ≤ 0.4, −3.141592 ≤ ψ ≤
+−3.141592 + 0.005, 100 ≤ vown ≤ 400, 0 ≤ vint ≤ 400.
+– Desired output property: the score for “strong right” is the minimal score.
+*)
+
+let property5 network x = 
+  is_valid x && precondition5 x ==> postcondition5 (network x)
+;;
+
+let precondition5 (dist, angle, angle_int, vown, vint) = 
+  (250. <=. dist) && (dist <=. 400.) &&
+  (0.2 <=. angle && angle <=. 0.6) && 
+  (-3.141592 <=. angle_int && angle_int <=. (3.141592 +. 0.005)) && 
+  (100. <=. vown) && (vown <=. 400.) &&
+  (100. <=. vint) && (vint <=. 400.)
+;;
+
+let postcondition5 output =
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  ( strong_right <=. coc &&
+    strong_right <=. weak_left && 
+    strong_right <=. weak_right &&
+    strong_right <=. strong_left
+  )
+;;
+
+let property5 run x = 
+  is_valid x && precondition5 x ==> postcondition5 (run x)
+;;
+
+
+
+(* Network 1,1 *)
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_1_batch_2000.iml");;
+
+let run (dist, angle, angle_int, vown, vint) =
+  let open Weights in 
+  let m = mk_input (dist, angle, angle_int, vown, vint) in
+  layer0 m |> layer1 |> layer2 |> layer3 |> layer4 |> layer5 |> layer6
+;;
+
+let property = property5 run;;
+
+let () = record_proof "property" 5 "1,1";;
+

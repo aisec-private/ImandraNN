@@ -1,0 +1,57 @@
+(*
+Property φ8.
+– Description: For a large vertical separation and a previous “weak left” advi-
+sory, the network will either output COC or continue advising “weak left”.
+– Tested on: N2,9.
+– Input constraints: 0 ≤ ρ ≤ 60760, −3.141592 ≤ θ ≤ −0.75 · 3.141592, −0.1 ≤
+ψ ≤ 0.1, 600 ≤ vown ≤ 1200, 600 ≤ vint ≤ 1200.
+– Desired output property: the score for “weak left” is minimal or the score
+for COC is minimal.
+*)
+
+let precondition8 (dist, angle, angle_int, vown, vint) = 
+  (0 <= dist && dist <= 60760) &&
+  (-3 <= angle && angle <= -2) &&
+  (angle_int = 0) &&
+  (600 <= vown && vown <= 1200) &&
+  (600 <= vint && vint <= 1200)
+;;
+
+let postcondition8 output =
+  let g i j = output (Matrix.Value (i,j)) in
+  let coc = g 0 0 in
+  let weak_left = g 0 1 in
+  let weak_right = g 0 2 in
+  let strong_left = g 0 3 in
+  let strong_right = g 0 4 in
+  ( weak_left <= coc &&
+    weak_left <= strong_right && 
+    weak_left <= weak_right &&
+    weak_left <= strong_left
+  ) ||
+  ( weak_right <= coc &&
+    weak_right <= strong_right && 
+    weak_right <= weak_left &&
+    weak_right <= strong_left
+  )
+;;
+
+let property8 network x = 
+  is_valid x && precondition8 x ==> postcondition8 (network x)
+;;
+
+
+
+(* Network 2,9 *)
+let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_9_batch_2000.iml");;
+
+let run (dist, angle, angle_int, vown, vint) =
+  let open Weights in 
+  let m = mk_input (dist, angle, angle_int, vown, vint) in
+  layer0 m |> layer1 |> layer2 |> layer3 |> layer4 |> layer5 |> layer6
+;;
+
+let property = property8 run;;
+
+let () = record_proof "property" 8 "2,9";;
+

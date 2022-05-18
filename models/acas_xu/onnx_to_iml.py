@@ -106,9 +106,9 @@ def write_matrix_FR(file, m, var_name):
     file.write(
         f'''\nlet {var_name} = FC.fc FC.relu (
     function
-        Rows -> Int {m.shape[0]}
-        | Cols -> Int {m.shape[1]}
-        | Value (i,j) -> Val (Map.get (i,j) {var_name}_map)
+        Rows -> {m.shape[0]}.
+        | Cols -> {m.shape[1]}.
+        | Value (i,j) -> (Map.get (i,j) {var_name}_map)
     )\n
     ''' 
     )

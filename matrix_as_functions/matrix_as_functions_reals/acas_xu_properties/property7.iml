@@ -1,0 +1,54 @@
+(*
+Property φ7.
+– Description: If vertical separation is large, the network will never advise a
+strong turn.
+– Tested on: N1,9.
+– Input constraints: 0 ≤ ρ ≤ 60760, −3.141592 ≤ θ ≤ 3.141592, −3.141592 ≤
+ψ ≤ 3.141592, 100 ≤ vown ≤ 1200, 0 ≤ vint ≤ 1200.
+– Desired output property: the scores for “strong right” and “strong left” are
+never the minimal scores.
+*)
+let precondition7 (dist, angle, angle_int, vown, vint) = 
+  (* angle conditions are checked in `is_valid` *)
+  (0. <=. dist) && (dist <=. 60760.) && 
+  (100. <=. vown) && (vown <=. 1200.) &&
+  (0. <=. vint) && (vint <=. 1200.)
+
+let postcondition7 output = 
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  ( strong_right >. coc ||
+    strong_right >. weak_left || 
+    strong_right >. weak_right ||
+    strong_right >. strong_left
+  ) &&
+  ( strong_left >. coc ||
+    strong_left >. weak_left || 
+    strong_left >. weak_right || 
+    strong_left >. strong_right
+  )
+;;
+
+let property7 network x = 
+  is_valid x && precondition7 x ==> postcondition7 (network x)
+;;
+
+
+(* Network 1,9 *)
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_9_batch_2000.iml");;
+
+let run (dist, angle, angle_int, vown, vint) =
+  let open Weights in 
+  let m = mk_input (dist, angle, angle_int, vown, vint) in
+  layer0 m |> layer1 |> layer2 |> layer3 |> layer4 |> layer5 |> layer6
+;;
+
+let property = property7 run;;
+
+let () = record_proof "property" 7 "1,9";;
+
+

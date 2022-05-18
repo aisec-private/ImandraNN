@@ -1,5 +1,5 @@
-(* let () = System.use("matrix.iml")
-let () = System.use("fully_connected.iml") *)
+let () = System.use("matrix.iml")
+let () = System.use("fully_connected.iml")
 let () = System.use "../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_1_batch_2000.iml"
 
 (* 
