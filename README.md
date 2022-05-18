@@ -2,22 +2,26 @@
 
 ### File hierarchy
 
-This repository holds the code for the submission to ITP2022 "Neural Network Verification with Imandra: a Holistic Approach".
+This repository holds the code for the submission to PPDP2022 "Neural Network Verification with Imandra: a Holistic Approach".
 The code is separated into 6 parts:
 
 * `preliminary`: the implementation of a multi-perceptron trained on the Iris Dataset in IML (Section 2)
 
-* `cnn_library`:
+* `matrix_as_lists/matrix_as_lists_reals`:
   - the library for representing convolutional neural networks (CNN) in IML (Section 3).
   - code for experiments on filter properties (Section 7).
 
-* `cnn_library_quantised`:
+* `matrix_as_lists/matrix_as_lists_integers`:
   - the quantised version of the previous library, necessary to use Imandra's Blast strategy (Section 4).
   - the implementation of multiple definitions of robustness (Section 4), and the evaluation of these multiple definitions.
 
-* `cnn_library_matrix_as_function`:
+* `matrix_as_functions`:
   - the formalisation of Neural networks with Matrix as defined as functions as described in Section 5.
   - the verification of a property on a quantised model from the ACAS-Xu benchmark
+
+* `matrix_as_records`:
+  - Matrix implemented as records as described in Section ?
+  - verification of properties on the ACAS Xu benchmark
 
 * `induction`:
   - the proof of properties on perceptrons by induction reasoning (Section 6).
