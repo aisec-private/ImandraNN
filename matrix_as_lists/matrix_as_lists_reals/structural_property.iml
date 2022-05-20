@@ -1,0 +1,112 @@
+(* forall F: CNN, forall i: happy-face-image :     left_diagonal_filter \in F AND right_diagonal_filter \in F AND pos_weights F  ==> F(i) = Happy *)
+
+let (>>=) = Res.bind
+let (=?) = Res.eq
+
+let make_cnn w0 w4 = 
+    let layer_0 = Layer.convolution w0 in
+    let layer_1 = Layer.max_pool (2,2) in
+    let layer_2 = Layer.flatten in
+    let layer_4 = Layer.fc (fun x -> x) w4 in
+    fun input -> layer_0 input >>= layer_1 >>= layer_2 >>= layer_4 >>= arg_max
+;;
+
+
+let check_weights_dimensions w0 w4 = 
+    let open Matrix in
+    let (rows_0, cols_0) = dimensions w0 in
+    let (rows_4, cols_4) = dimensions w4 in
+    ((rows_0, cols_0) = (2,2)) &&  
+    ((rows_4, cols_4) = (2,33))
+;;
+(* replace dimensions with correct measures *)
+
+
+let is_left_diagonal (m: ('a Matrix.t, 'b) result) : bool = 
+    let is_valid m = (Res.map Matrix.dimensions m) = (Ok (3, 3)) in
+    (
+        is_valid m && 
+        (m >>= (Matrix.nth (0,0))) =? (Ok 1.) && 
+        (m >>= (Matrix.nth (0,1))) =? (Ok 0.) &&
+        (m >>= (Matrix.nth (0,2))) =? (Ok 0.) &&
+        (m >>= (Matrix.nth (1,0))) =? (Ok 0.) && 
+        (m >>= (Matrix.nth (1,1))) =? (Ok 1.) && 
+        (m >>= (Matrix.nth (1,2))) =? (Ok 0.) && 
+        (m >>= (Matrix.nth (2,0))) =? (Ok 0.) && 
+        (m >>= (Matrix.nth (2,1))) =? (Ok 0.) && 
+        (m >>= (Matrix.nth (2,2))) =? (Ok 1.)
+    )
+;;
+
+let is_left_diagonal_present m = 
+    let open Matrix in    
+    (
+        (is_left_diagonal (sub_matrix m (4,0) (3,3))) ||
+        (is_left_diagonal (sub_matrix m (5,0) (3,3))) ||
+        (is_left_diagonal (sub_matrix m (6,0) (3,3))) ||
+        (is_left_diagonal (sub_matrix m (4,1) (3,3))) ||
+        (is_left_diagonal (sub_matrix m (5,1) (3,3))) ||
+        (is_left_diagonal (sub_matrix m (6,1) (3,3))) ||
+        (is_left_diagonal (sub_matrix m (4,2) (3,3))) ||
+        (is_left_diagonal (sub_matrix m (5,2) (3,3))) ||
+        (is_left_diagonal (sub_matrix m (6,2) (3,3)))
+    )
+
+let is_right_diagonal (m: ('a Matrix.t, 'b) result) : bool = 
+    let is_valid m = (Res.map Matrix.dimensions m) = (Ok (3, 3)) in
+    (
+        is_valid m && 
+        (m >>= (Matrix.nth (0,0))) =? (Ok 0.) && 
+        (m >>= (Matrix.nth (0,1))) =? (Ok 0.) &&
+        (m >>= (Matrix.nth (0,2))) =? (Ok 1.) &&
+        (m >>= (Matrix.nth (1,0))) =? (Ok 0.) && 
+        (m >>= (Matrix.nth (1,1))) =? (Ok 1.) && 
+        (m >>= (Matrix.nth (1,2))) =? (Ok 0.) && 
+        (m >>= (Matrix.nth (2,0))) =? (Ok 1.) && 
+        (m >>= (Matrix.nth (2,1))) =? (Ok 0.) && 
+        (m >>= (Matrix.nth (2,2))) =? (Ok 0.)
+    )
+;;
+
+let is_right_diagonal_present m = 
+    let open Matrix in    
+    (
+        (is_right_diagonal (sub_matrix m (4,4) (3,3))) ||
+        (is_right_diagonal (sub_matrix m (5,4) (3,3))) ||
+        (is_right_diagonal (sub_matrix m (6,4) (3,3))) ||
+        (is_right_diagonal (sub_matrix m (4,5) (3,3))) ||
+        (is_right_diagonal (sub_matrix m (5,5) (3,3))) ||
+        (is_right_diagonal (sub_matrix m (6,5) (3,3))) ||
+        (is_right_diagonal (sub_matrix m (4,6) (3,3))) ||
+        (is_right_diagonal (sub_matrix m (6,5) (3,3))) ||
+        (is_right_diagonal (sub_matrix m (6,6) (3,3)))
+    )
+
+let is_happy_image (m: 'a Matrix.t) =
+    let open Matrix in  
+    is_left_diagonal_present m &&
+    is_right_diagonal_present m
+
+let input = [
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+        [ 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 1.0; 0.0];
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+        [ 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 1.0; 0.0];
+        [ 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0];
+        [ 0.0; 0.0; 0.0; 1.0; 1.0; 1.0; 0.0; 0.0; 0.0];
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+];;
+
+(* 
+let filter_adequacy_happy w0 w4 i = 
+    let f = make_cnn w0 w4 in
+    (
+        is_happy_image i &&
+        check_weights_dimensions w0 w4 &&
+        has_left_diagonal_filter w0 &&
+        has_right_diagonal_filter w0 &&
+        check_fully_connected_weights w4
+    ) ==> (f i) = "Happy" 
+;; *)

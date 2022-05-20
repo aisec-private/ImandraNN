@@ -220,6 +220,7 @@ let at_least_one_match value filter =
 ;;
 
 let happy_properties (l: (real Matrix.matrix list)) = 
+(* properties for happy images deduced from learned filters *)
   let f1 = Vec.hd l in
   let f1' = Matrix.sub_matrix f1 (2, 0) (2, 2) in
   let left_vertical = f1' >>= is_left_vertical in
@@ -231,6 +232,7 @@ let happy_properties (l: (real Matrix.matrix list)) =
 ;;
 
 let sad_properties (l: (real Matrix.matrix list)) = 
+(* properties for sad images deduced from learned filters *)
   let f2 = Vec.nth 1 l in
   let f2' = f2 >>= (fun x -> Matrix.sub_matrix x (2, 0) (2, 2)) in
   let bl_corner = f2' >>= is_bl_corner in
@@ -239,6 +241,7 @@ let sad_properties (l: (real Matrix.matrix list)) =
 ;;
 
 let happy_binary_properties l =
+(* properties for happy images, when using user-imposed diagonal binary filters *)
   let f1 = Vec.nth 0 l in
   let f2 = Vec.nth 1 l in
   (* bottom left corner of output for filter 1 *)

@@ -6,11 +6,11 @@ let () = System.use "fully_connected.iml";;
 *)
 
 module Layer = struct
-    let max_pool pool_size (input: real Matrix.matrix list) = 
+    let max_pool pool_size (input: real Matrix.t list) = 
         Res.extract_list (List.map (Max_pool.max_pool pool_size) input)
 
 
-    let convolution (filters: real Matrix.matrix list list) (input: real Matrix.matrix list) =
+    let convolution (filters: real Matrix.t list list) (input: real Matrix.t list) =
         Res.extract_list (List.map (Convolution.conv_channels input) filters)
 
 
@@ -19,7 +19,7 @@ module Layer = struct
         (Res.lift2 List.append) (flatten' input (i - 1)) (Matrix.column i input)
 
 
-    let flatten (input: real Matrix.matrix list) = 
+    let flatten (input: real Matrix.t list) = 
         let flat_input = List.map Matrix.flatten input in
         let (rows, cols) = Matrix.dimensions flat_input in
         flatten' flat_input (cols - 1)
