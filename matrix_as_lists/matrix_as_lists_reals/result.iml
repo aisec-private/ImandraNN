@@ -44,10 +44,14 @@ module Res = struct
         | Ok res' -> res' <=. eps
         | Error _ -> false
 
+    let gte x y = match (x, y) with
+        | (Ok x', Ok y') -> x' >=. y'
+        | (_, _)         -> false
+
     let eq x y = match (x, y) with
         | (Ok x', Ok y') -> x' = y'
         | (_, _)         -> false
-  
+
     (* let is_approx a b delta = let abs x = if x <. 0. then (-1. *. x) else x in 
         lift2 (fun a' b' -> abs(a' -. b') <=. delta) a b;;
 

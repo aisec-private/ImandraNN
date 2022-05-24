@@ -2,6 +2,7 @@
 
 let (>>=) = Res.bind
 let (=?) = Res.eq
+let (>=?) = Res.gte
 
 let make_cnn w0 w4 = 
     let layer_0 = Layer.convolution w0 in
@@ -125,6 +126,21 @@ let has_left_diagonal_filter (w: ('a Matrix.t) Vec.t) =
     (is_left_diagonal_filter (Matrix.nth (0,0) w)) || 
     (is_left_diagonal_filter (Matrix.nth (1,0) w))
 
+let check_fully_connected_weights (w: 'a Matrix.t) : bool = 
+    let left_corner_correlation = (
+        ((Matrix.nth (0, 17)) w >=? (Ok 0.)) ||
+        ((Matrix.nth (0, 19)) w >=? (Ok 0.)) ||
+        ((Matrix.nth (0, 25)) w >=? (Ok 0.)) ||
+        ((Matrix.nth (0, 27)) w >=? (Ok 0.))
+    ) in 
+    let right_corner_correlation = (
+        ((Matrix.nth (0, 22)) w >=? (Ok 0.)) ||
+        ((Matrix.nth (0, 24)) w >=? (Ok 0.)) ||
+        ((Matrix.nth (0, 30)) w >=? (Ok 0.)) ||
+        ((Matrix.nth (0, 32)) w >=? (Ok 0.))
+    ) in
+    left_corner_correlation && right_corner_correlation
+
 
 let filter_adequacy_happy w0 w4 i = 
     let f = make_cnn w0 w4 in
@@ -132,7 +148,7 @@ let filter_adequacy_happy w0 w4 i =
         is_happy_image i &&
         check_weights_dimensions w0 w4 &&
         has_left_diagonal_filter w0 &&
-        has_right_diagonal_filter w0 
-        (* check_fully_connected_weights w4 *)
+        has_right_diagonal_filter w0 &&
+        check_fully_connected_weights w4
     ) ==> (f [i]) = (Ok "Happy") 
 ;;
