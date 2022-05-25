@@ -63,6 +63,17 @@ module Vec = struct
     let max_i' a b = if a > b then a else b
     
     let max_i v = List.fold_left max_i' 0 v
+
+    let rec argmax' v i i_max max_val = match v with
+        | []      -> i_max 
+        | (x::xs) -> if x >. max_val then (
+                argmax' xs (i+1) i x
+            ) else (
+                argmax' xs (i+1) i_max max_val
+            )
+    let argmax (v: 'a t): int = match v with 
+        | []      -> 0 
+        | (x::xs) -> argmax' xs 1 0 x
 end
 
 module Matrix = struct
@@ -104,6 +115,12 @@ module Matrix = struct
     let sum (m: real matrix) = Vec.sum (List.map Vec.sum m);;
 
     let max m = Vec.max (List.map Vec.max m);;
+
+    let argmax m = let rows_max = List.map Vec.max m in
+        let max_row = Vec.argmax rows_max in
+        let max_col = Res.map Vec.argmax (Vec.nth max_row m) in
+        Res.map (fun x -> max_row, x) max_col 
+
 
     let dimensions m = if m = [] 
                    then (0, 0)

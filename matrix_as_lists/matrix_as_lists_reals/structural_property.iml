@@ -24,7 +24,7 @@ let check_weights_dimensions w0 w4 =
 
 
 let is_left_diagonal (m: 'a Matrix.t) ((i,j): int*int) : bool = 
-    let is_valid m = (Matrix.dimensions m) = (3, 3) in
+    let is_valid m = (Matrix.dimensions m) = (9, 9) in
     (
         is_valid m && 
         (Matrix.nth (0+i, 0+j) m)  =? (Ok 1.) && 
@@ -54,7 +54,7 @@ let is_left_diagonal_present m =
     )
 
 let is_right_diagonal (m: 'a Matrix.t) ((i,j): int*int): bool = 
-    let is_valid m = (Matrix.dimensions m) = (3, 3) in
+    let is_valid m = (Matrix.dimensions m) = (9, 9) in
     (
         is_valid m && 
         (Matrix.nth (0+i, 0+j) m)  =? (Ok 0.) && 
@@ -100,55 +100,58 @@ let input = [
         [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
 ];;
 
-let is_right_diagonal_filter (filter: (('a Matrix.t), 'b) result): bool =
-    (
-        (Res.map Matrix.dimensions filter) = (Ok (2, 2)) &&    
-        (filter >>= (Matrix.nth (0,0))) =? (Ok 0.) &&
-        (filter >>= (Matrix.nth (0,1))) =? (Ok 1.) &&
-        (filter >>= (Matrix.nth (1,0))) =? (Ok 1.) &&
-        (filter >>= (Matrix.nth (1,1))) =? (Ok 0.)
-    )
-   
-let has_right_diagonal_filter (w: ('a Matrix.t) Vec.t) = 
-    (is_right_diagonal_filter (Matrix.nth (0,0) w)) || 
-    (is_right_diagonal_filter (Matrix.nth (1,0) w))
-
-let is_left_diagonal_filter (filter: (('a Matrix.t), 'b) result): bool =
-    (
-        (Res.map Matrix.dimensions filter) = (Ok (2, 2)) &&    
-        (filter >>= Matrix.nth (0,0)) =? (Ok 1.) &&
-        (filter >>= Matrix.nth (0,1)) =? (Ok 0.) &&
-        (filter >>= Matrix.nth (1,0)) =? (Ok 0.) &&
-        (filter >>= Matrix.nth (1,1)) =? (Ok 1.)
-    )
-   
-let has_left_diagonal_filter (w: ('a Matrix.t) Vec.t) = 
-    (is_left_diagonal_filter (Matrix.nth (0,0) w)) || 
-    (is_left_diagonal_filter (Matrix.nth (1,0) w))
-
 let check_fully_connected_weights (w: 'a Matrix.t) : bool = 
     let left_corner_correlation = (
-        ((Matrix.nth (0, 17)) w >=? (Ok 0.)) ||
-        ((Matrix.nth (0, 19)) w >=? (Ok 0.)) ||
-        ((Matrix.nth (0, 25)) w >=? (Ok 0.)) ||
-        ((Matrix.nth (0, 27)) w >=? (Ok 0.))
+        (Matrix.argmax w =? (Ok (0, 16))) ||
+        (Matrix.argmax w =? (Ok (0, 18))) ||
+        (Matrix.argmax w =? (Ok (0, 24))) ||
+        (Matrix.argmax w =? (Ok (0, 26)))
     ) in 
     let right_corner_correlation = (
-        ((Matrix.nth (0, 22)) w >=? (Ok 0.)) ||
-        ((Matrix.nth (0, 24)) w >=? (Ok 0.)) ||
-        ((Matrix.nth (0, 30)) w >=? (Ok 0.)) ||
-        ((Matrix.nth (0, 32)) w >=? (Ok 0.))
+        (Matrix.argmax w =? (Ok (0, 21))) ||
+        (Matrix.argmax w =? (Ok (0, 23))) ||
+        (Matrix.argmax w =? (Ok (0, 29))) ||
+        (Matrix.argmax w =? (Ok (0, 31)))
     ) in
-    left_corner_correlation && right_corner_correlation
+    left_corner_correlation || right_corner_correlation
+
+(* f(x) = happy, if the sum of activations of the FC layer x*w_1 + ... + x*nw_n  is higher than the sum  x*w_n+1 + ... + x*w_n+n *)
+let is_happy input weights =
+    let layer_4 = Layer.fc (fun x -> x) weights in
+    match (input >>= layer_4) with
+        | Ok (x::y::[]) -> x >. y
+        | _ -> false
+
+let max_bottom_left_corner (m: ('a Matrix.t, 'b) result) = 
+    (Res.map Matrix.dimensions m) = (Ok (4,4)) &&    
+    ((m >>= Matrix.argmax) = (Ok (2,0)) || (m >>= Matrix.argmax) = (Ok (3,1))) 
+
+let max_bottom_right_corner (m: ('a Matrix.t, 'b) result) = 
+    (Res.map Matrix.dimensions m) = (Ok (4,4)) &&    
+    ((m >>= Matrix.argmax) = (Ok (2,3)) || (m >>= Matrix.argmax) = (Ok (3,2))) 
+
+let has_pattern (m: (('a Matrix.t) Vec.t)): bool =
+    max_bottom_left_corner (Vec.nth 0 m) &&
+    max_bottom_right_corner (Vec.nth 1 m)
+
+let tuned_weights max_pool_output weights =
+    (has_pattern max_pool_output) && (check_fully_connected_weights weights) ==> is_happy (Layer.flatten max_pool_output) weights
 
 
+(* 3. an adequate happy filter is the one that has the pooling layers shape S* for ideal happy image *)
+let check_adequate_happy_filter i (w: ('a Matrix.t) Vec.t): bool = 
+    let layer0 = Layer.convolution w in
+    is_happy_image i ==> (Res.map has_pattern (layer0 [i])) = (Ok true)
+
+(* Theorem: given a happy image x, an adequate filter and tuned weights, f(x) = Happy *)
 let filter_adequacy_happy w0 w4 i = 
+    let layer0 = Layer.convolution Weight.layer0 in
     let f = make_cnn w0 w4 in
     (
         is_happy_image i &&
-        check_weights_dimensions w0 w4 &&
-        has_left_diagonal_filter w0 &&
-        has_right_diagonal_filter w0 &&
-        check_fully_connected_weights w4
-    ) ==> (f [i]) = (Ok "Happy") 
+        (* check_weights_dimensions w0 w4 && *)
+        check_adequate_happy_filter i w0 &&
+        tuned_weights  (layer0 [i]) w4
+    ) ==> (f [i]) = (Ok "Happy")
 ;;
+
