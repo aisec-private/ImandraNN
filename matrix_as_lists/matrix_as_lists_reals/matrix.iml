@@ -74,6 +74,14 @@ module Vec = struct
     let argmax (v: 'a t): int = match v with 
         | []      -> 0 
         | (x::xs) -> argmax' xs 1 0 x
+
+    let rec length_real (v: 'a t) : real = match v with
+        | [] -> 0.
+        | (x::xs) -> 1. +. (length_real xs)
+
+    let mean (v: 'a t): 'a = let s = sum v in
+        let l = length_real v in
+        s /. l
 end
 
 module Matrix = struct

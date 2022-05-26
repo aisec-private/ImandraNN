@@ -3,6 +3,7 @@
 let (>>=) = Res.bind
 let (=?) = Res.eq
 let (>=?) = Res.gte
+let (&&?) = Res.eq
 
 let make_cnn w0 w4 = 
     let layer_0 = Layer.convolution w0 in
@@ -100,20 +101,32 @@ let input = [
         [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
 ];;
 
-let check_fully_connected_weights (w: 'a Matrix.t) : bool = 
-    let left_corner_correlation = (
-        (Matrix.argmax w =? (Ok (0, 16))) ||
-        (Matrix.argmax w =? (Ok (0, 18))) ||
-        (Matrix.argmax w =? (Ok (0, 24))) ||
-        (Matrix.argmax w =? (Ok (0, 26)))
-    ) in 
-    let right_corner_correlation = (
-        (Matrix.argmax w =? (Ok (0, 21))) ||
-        (Matrix.argmax w =? (Ok (0, 23))) ||
-        (Matrix.argmax w =? (Ok (0, 29))) ||
-        (Matrix.argmax w =? (Ok (0, 31)))
-    ) in
-    left_corner_correlation || right_corner_correlation
+
+(* Begin checking FC weights pseudo-monotonicity property *)
+let rec get_extreme_values' (a: 'a Vec.t) (threshold: 'a) (i:int): (int Vec.t) = 
+    match a with
+        | [] -> [] 
+        | (hd::tl) -> if hd >=. threshold then (
+            i::(get_extreme_values' tl threshold (i+1))
+        ) else (
+            get_extreme_values' tl threshold (i+1)
+        )
+
+let get_extreme_values (a: 'a Vec.t): (int Vec.t) =
+    let a_mean = Vec.mean a in
+    let a_max = Vec.max a in
+    let threshold = a_mean +. ((a_max -. a_mean) /. 2.) in
+    get_extreme_values' a threshold 0 
+
+let rec check_higher_happy_weights extreme_values w = match extreme_values with
+    | [] -> true
+    | (x::xs) -> (Matrix.nth (0,x) w) >=? (Matrix.nth (1,x) w) && check_higher_happy_weights xs w
+
+let greater_happy_weights (weights: 'a Matrix.t) (flat_feature_map: 'a Vec.t) : (bool, 'b) result = 
+    let extreme_values = get_extreme_values flat_feature_map in
+    Ok (check_higher_happy_weights extreme_values weights)
+(* End checking FC weights pseudo-monotonicity property *)
+
 
 (* f(x) = happy, if the sum of activations of the FC layer x*w_1 + ... + x*nw_n  is higher than the sum  x*w_n+1 + ... + x*w_n+n *)
 let is_happy input weights =
@@ -130,22 +143,26 @@ let max_bottom_right_corner (m: ('a Matrix.t, 'b) result) =
     (Res.map Matrix.dimensions m) = (Ok (4,4)) &&    
     ((m >>= Matrix.argmax) = (Ok (2,3)) || (m >>= Matrix.argmax) = (Ok (3,2))) 
 
-let has_pattern (m: (('a Matrix.t) Vec.t)): bool =
-    max_bottom_left_corner (Vec.nth 0 m) &&
-    max_bottom_right_corner (Vec.nth 1 m)
+let has_pattern (m: (('a Matrix.t) Vec.t)): (bool, 'b) result = Ok (
+        max_bottom_left_corner (Vec.nth 0 m) &&
+        max_bottom_right_corner (Vec.nth 1 m)
+    )
 
-let tuned_weights max_pool_output weights =
-    (has_pattern max_pool_output) && (check_fully_connected_weights weights) ==> is_happy (Layer.flatten max_pool_output) weights
-
-
+(* Tuned weights: given the feature map a with extreme values a_i, ... a_j, the weights that connect a_{i...j} 
+    to "Happy"  neuron are greater than those connecting extreme values to "Sad" neuron *)
+let tuned_weights (feature_map: (('a Matrix.t) Vec.t, 'b) result) (weights: 'a Matrix.t): bool = 
+    let flattened_feature_map = feature_map >>= Layer.flatten in
+    (feature_map >>= has_pattern) =? (Ok true) ==> (flattened_feature_map >>= (greater_happy_weights weights)) =? (Ok true)
+     
 (* 3. an adequate happy filter is the one that has the pooling layers shape S* for ideal happy image *)
 let check_adequate_happy_filter i (w: ('a Matrix.t) Vec.t): bool = 
     let layer0 = Layer.convolution w in
-    is_happy_image i ==> (Res.map has_pattern (layer0 [i])) = (Ok true)
+    is_happy_image i ==> ((layer0 [i]) >>= has_pattern) = (Ok true)
+;;
 
 (* Theorem: given a happy image x, an adequate filter and tuned weights, f(x) = Happy *)
 let filter_adequacy_happy w0 w4 i = 
-    let layer0 = Layer.convolution Weight.layer0 in
+    let layer0 = Layer.convolution Weights.layer0 in
     let f = make_cnn w0 w4 in
     (
         is_happy_image i &&
@@ -154,4 +171,12 @@ let filter_adequacy_happy w0 w4 i =
         tuned_weights  (layer0 [i]) w4
     ) ==> (f [i]) = (Ok "Happy")
 ;;
+
+let channels = [
+    0.9652837; 0.;        0.;        0.9652837;
+    0.;        1.0999786; 0.;        1.0999786;
+    2.0652623; 0.;        0.9652837; 1.0999786;
+    0.;        2.0652623; 1.0999786; 1.0999786;
+]
+
 
