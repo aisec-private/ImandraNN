@@ -14,13 +14,13 @@ let make_cnn w0 w4 =
 ;;
 
 
-let check_weights_dimensions w0 w4 = 
+(* let check_weights_dimensions w0 w4 = 
     let open Matrix in
     let (rows_0, cols_0) = dimensions w0 in
     let (rows_4, cols_4) = dimensions w4 in
     ((rows_0, cols_0) = (2,2)) &&  
     ((rows_4, cols_4) = (2,33))
-;;
+;; *)
 (* replace dimensions with correct measures *)
 
 
@@ -122,16 +122,17 @@ let rec check_higher_happy_weights extreme_values w = match extreme_values with
     | [] -> true
     | (x::xs) -> (Matrix.nth (0,x) w) >=? (Matrix.nth (1,x) w) && check_higher_happy_weights xs w
 
-let greater_happy_weights (weights: 'a Matrix.t) (flat_feature_map: 'a Vec.t) : (bool, 'b) result = 
-    let extreme_values = get_extreme_values flat_feature_map in
+let greater_happy_weights (weights: 'a Matrix.t) (flatten_output: 'a Vec.t) : (bool, 'b) result = 
+    let extreme_values = get_extreme_values flatten_output in
+    if flatten_output = [] then (Ok false) else
     Ok (check_higher_happy_weights extreme_values weights)
 (* End checking FC weights pseudo-monotonicity property *)
 
 
-(* f(x) = happy, if the sum of activations of the FC layer x*w_1 + ... + x*nw_n  is higher than the sum  x*w_n+1 + ... + x*w_n+n *)
-let is_happy input weights =
+(* f(x) = happy, if the sum of activations of the FC layer x_1 * w_1 + ... + x_n * w_n  is higher than the sum  x_1 * w_n+1 + ... + x_n * w_n+n *)
+let is_happy flatten_output weights =
     let layer_4 = Layer.fc (fun x -> x) weights in
-    match (input >>= layer_4) with
+    match (flatten_output >>= layer_4) with
         | Ok (x::y::[]) -> x >. y
         | _ -> false
 
@@ -147,6 +148,13 @@ let has_pattern (m: (('a Matrix.t) Vec.t)): (bool, 'b) result = Ok (
         max_bottom_left_corner (Vec.nth 0 m) &&
         max_bottom_right_corner (Vec.nth 1 m)
     )
+
+(* the pseudo-weights monotonicity lemma, for now we define it to use it as an assumption *)
+let pseudo_weights_monotonicity weights flatten_output =
+    Vec.is_positive flatten_output &&
+    Res.to_bool (greater_happy_weights weights flatten_output) ==>
+        is_happy (Ok flatten_output) weights
+    
 
 (* Tuned weights: given the feature map a with extreme values a_i, ... a_j, the weights that connect a_{i...j} 
     to "Happy"  neuron are greater than those connecting extreme values to "Sad" neuron *)

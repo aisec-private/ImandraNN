@@ -82,6 +82,10 @@ module Vec = struct
     let mean (v: 'a t): 'a = let s = sum v in
         let l = length_real v in
         s /. l
+
+    let rec is_positive (v: 'a t): bool = match v with 
+        | [] -> true
+        | (x::xs) -> x >=. 0. && is_positive xs
 end
 
 module Matrix = struct

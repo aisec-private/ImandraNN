@@ -52,7 +52,7 @@ module Res = struct
         | (Ok x', Ok y') -> x' = y'
         | (_, _)         -> false
 
-    let to_bool (x: (bool, 'b) res) = match x with
+    let to_bool (x: (bool, 'b) result) = match x with
         | (Ok true) -> true
         | _ -> false
     (* let is_approx a b delta = let abs x = if x <. 0. then (-1. *. x) else x in 
