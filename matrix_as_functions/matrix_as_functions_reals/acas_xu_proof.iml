@@ -1,4 +1,4 @@
-(* let () = System.use "acas_xu_network.iml";; *)
+let () = System.use "acas_xu_network.iml";;
 
 let relu = FC.relu;;
 

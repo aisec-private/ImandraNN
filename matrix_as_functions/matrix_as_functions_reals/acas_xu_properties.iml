@@ -15,8 +15,7 @@ threshold.
 let precondition1 (dist, angle, angle_int, vown, vint) =
   (dist >=. 55948.) && (vown >=. 1145.) && (vint <=. 60.)
 
-let postcondition1 x =
-  let output = run x in
+let postcondition1 output =
   let coc = Matrix.nth output 0. 0. in
   coc <=. 1500.
 ;;
@@ -34,8 +33,7 @@ ownship, the score of a COC advisory will never be maximal.
 – Desired output property: the score for COC is not the maximal score.
 *)
 
-let postcondition2 x =
-  let output = run x in
+let postcondition2 output =
   let g i j = Matrix.nth output i j in
   let coc = g 0. 0. in
   let weak_left = g 0. 1. in
@@ -71,8 +69,7 @@ let precondition3 (dist, angle, angle_int, vown, vint) =
   (vint >=. 960.)
 ;;
 
-let postcondition3 x = 
-  let output = run x in
+let postcondition3 output =
   let g i j = Matrix.nth output i j in
   let coc = g 0. 0. in
   let weak_left = g 0. 1. in
@@ -132,8 +129,8 @@ let precondition5 (dist, angle, angle_int, vown, vint) =
   (100. <=. vint) && (vint <=. 400.)
 ;;
 
-let postcondition5 x =
-  let output = run x in
+let postcondition5 output =
+ let output = run x in
   let g i j = Matrix.nth output i j in
   let coc = g 0. 0. in
   let weak_left = g 0. 1. in
@@ -191,8 +188,7 @@ let precondition7 (dist, angle, angle_int, vown, vint) =
   (100. <=. vown) && (vown <=. 1200.) &&
   (0. <=. vint) && (vint <=. 1200.)
 
-let postcondition7 x = 
-  let output = run x in
+let postcondition7 output =
   let g i j = Matrix.nth output i j in
   let coc = g 0. 0. in
   let weak_left = g 0. 1. in
@@ -234,8 +230,7 @@ let precondition8 (dist, angle, angle_int, vown, vint) =
   (600. <=. vint && vint <=. 1200.)
 ;;
 
-let postcondition8 x = 
-  let output = run x in
+let postcondition8 output =
   let g i j = Matrix.nth output i j in
   let coc = g 0. 0. in
   let weak_left = g 0. 1. in
@@ -277,8 +272,7 @@ let precondition9 (dist, angle, angle_int, vown, vint) =
   (0. <=. vint && vint <=. 150.)
 ;;
 
-let postcondition9 x = 
-  let output = run x in
+let postcondition9 output =
   let g i j = Matrix.nth output i j in
   let coc = g 0. 0. in
   let weak_left = g 0. 1. in
@@ -314,8 +308,7 @@ let precondition10 (dist, angle, angle_int, vown, vint) =
   (600. <=. vint && vint <=. 1200.)
 ;;
 
-let postcondition10 x = 
-  let output = run x in
+let postcondition10 output =
   let g i j = Matrix.nth output i j in
   let coc = g 0. 0. in
   let weak_left = g 0. 1. in

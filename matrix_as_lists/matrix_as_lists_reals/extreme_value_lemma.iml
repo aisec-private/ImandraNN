@@ -1,0 +1,74 @@
+(* 
+
+We want to prove that for a perceptron with positive weights and positive inputs,
+if the input increases, the output will increase as well
+
+*)
+
+let rec dot_product l1 l2 =
+  match (l1, l2) with
+    | ([], _) | (_, []) -> 0.
+    | (h1::t1, h2::t2) -> (h1 *. h2) +. (dot_product t1 t2)
+;;
+
+let rec len_real = function
+    | [] -> 0.
+    | hd::tl -> 1. +. (len_real tl)
+;;
+
+let rec sum = function
+    | [] -> 0.
+    | hd::tl -> hd +. (sum tl)
+
+let mean l = (sum l) /. (len_real l)
+
+let rec max' l max_val = match l with
+    | [] -> max_val
+    | (hd::tl) -> let max_val' = if hd >. max_val then hd else max_val in
+        max' tl max_val'
+
+let max (l: real list): real = match l with 
+| []      -> 0.
+| (hd::tl) -> max' tl hd
+
+let extreme_threshold l = let l_max = max l in
+    let l_mean = mean l in
+    l_max -. ((l_max -. l_mean) /. 2.)
+
+let rec extreme_values l threshold = match l with 
+    | [] -> [] 
+    | hd::tl -> if hd >=. threshold then (
+            hd::(extreme_values tl threshold)
+        ) else (
+            extreme_values tl threshold
+        )
+
+(* lexicographically comparing 2 lists *)
+let rec gte l1 l2 = match (l1, l2) with
+  | ([], []) -> true
+  | (_, []) -> false
+  | ([], _) -> false
+  | (h1::t1, h2::t2) -> (h1 >=. h2) && (gte t1 t2)
+
+let rec dot_product l1 l2 =
+  match (l1, l2) with
+    | ([], _) | (_, []) -> 0.
+    | (h1::t1, h2::t2) -> (h1 *. h2) +. (dot_product t1 t2)
+
+let rec all l predicate = match l with 
+    | [] -> true
+    | hd::tl -> (predicate hd) && all tl predicate
+
+let extreme_value_precondition (w_x_high,w_x_low) (w_y_high,w_y_low) (a_high,a_low) = 
+    let w_x = w_x_high @ w_x_low in
+    let w_y = w_y_high @ w_y_low in
+    let a = a_high @ a_low in
+    all w_x_high (fun x -> x >=. (extreme_threshold w_x)) &&
+    all w_x_low (fun x -> x <=. (mean w_x)) &&
+    all w_y_high (fun x -> x >=. (extreme_threshold w_y)) &&
+    all w_y_low (fun x -> x <=. (mean w_y)) &&
+    gte w_x_high w_y_high && gte w_x_low w_y_low
+
+
+let extreme_value_postcondition (w_x_high,w_x_low) (w_y_high,w_y_low) (a_high,a_low) = 
+    gte (w_x_high "")

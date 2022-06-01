@@ -101,7 +101,7 @@ def write_matrix_FR(file, m, var_name):
     for (i, line) in enumerate(m):
         for (j, el) in enumerate(line):
             if el != 0:
-                file.write(f'\tMap.add ({i},{j}) ({m[i,j]:.5f}) @@\n')
+                file.write(f'\tMap.add ({i}.,{j}.) ({m[i,j]:.5f}) @@\n')
     file.write('\tMap.const 0.\n')
     file.write(
         f'''\nlet {var_name} = FC.fc FC.relu (

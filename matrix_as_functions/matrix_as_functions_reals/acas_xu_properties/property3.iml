@@ -9,25 +9,25 @@ vint ≥ 960.
 *)
 
 let precondition3 (dist, angle, angle_int, vown, vint) =
-  (1500 <= dist) && 
-  (dist <= 1800) && 
-  (angle = 0) && 
-  (angle_int >= 3) &&
-  (vown >= 980) &&
-  (vint >= 960)
+  (1500. <=. dist) && 
+  (dist <=. 1800.) && 
+  (-0.6 <=. angle && angle <=. 0.6) && 
+  (angle_int >=. 3.) &&
+  (vown >=. 980.) &&
+  (vint >=. 960.)
 ;;
 
-let postcondition3 output = 
-  let g i j = output (Matrix.Value (i,j)) in
-  let coc = g 0 0 in
-  let weak_left = g 0 1 in
-  let weak_right = g 0 2 in
-  let strong_left = g 0 3 in
-  let strong_right = g 0 4 in
-  (weak_left <= coc
-   || weak_right <= coc
-   || strong_left <= coc
-   || strong_right <= coc)
+let postcondition3 output =
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  (weak_left <=. coc
+   || weak_right <=. coc
+   || strong_left <=. coc
+   || strong_right <=. coc)
 ;;
 
 let property3 network x = 
@@ -36,7 +36,7 @@ let property3 network x =
 
 (*
 (* Network 1,1 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_1_1_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_1_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -50,7 +50,7 @@ let () = record_proof "property" 3 "1,1";;
 
 
 (* Network 1,2 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_1_2_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_2_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -64,7 +64,7 @@ let () = record_proof "property" 3 "1,2";;
 
 
 (* Network 1,3 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_1_3_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_3_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -79,7 +79,7 @@ let () = record_proof "property" 3 "1,3";;
 
 
 (* Network 1,4 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_1_4_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_4_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -94,7 +94,7 @@ let () = record_proof "property" 3 "1,4";;
 
 
 (* Network 1,5 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_1_5_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_5_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -108,7 +108,7 @@ let () = record_proof "property" 3 "1,5";;
 
 
 (* Network 1,6 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_1_6_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_1_6_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -123,7 +123,7 @@ let () = record_proof "property" 3 "1,6";;
 
 
 (* Network 2,1 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_1_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_1_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -137,7 +137,7 @@ let () = record_proof "property" 3 "2,1";;
 
 
 (* Network 2,2 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_2_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_2_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -151,7 +151,7 @@ let () = record_proof "property" 3 "2,2";;
 
 
 (* Network 2,3 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_3_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_3_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -165,7 +165,7 @@ let () = record_proof "property" 3 "2,3";;
 
 
 (* Network 2,4 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_4_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_4_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -178,7 +178,7 @@ let property = property3 run;;
 let () = record_proof "property" 3 "2,4";;
 
 (* Network 2,5 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_5_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_5_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -192,7 +192,7 @@ let () = record_proof "property" 3 "2,5";;
 
 
 (* Network 2,6 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_6_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_6_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -206,7 +206,7 @@ let () = record_proof "property" 3 "2,6";;
 
 
 (* Network 2,7 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_7_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_7_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -220,7 +220,7 @@ let () = record_proof "property" 3 "2,7";;
 
 
 (* Network 2,8 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_8_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_8_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -234,7 +234,7 @@ let () = record_proof "property" 3 "2,8";;
 
 
 (* Network 2,9 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_9_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_9_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -248,7 +248,7 @@ let () = record_proof "property" 3 "2,9";;
 
 
 (* Network 3,1 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_1_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_1_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -262,7 +262,7 @@ let () = record_proof "property" 3 "3,1";;
 
 
 (* Network 3,2 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_2_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_2_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -276,7 +276,7 @@ let () = record_proof "property" 3 "3,2";;
 
 
 (* Network 3,3 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_3_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_3_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -290,7 +290,7 @@ let () = record_proof "property" 3 "3,3";;
 
 
 (* Network 3,4 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_4_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_4_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -305,7 +305,7 @@ let () = record_proof "property" 3 "3,4";;
 *)
 
 (* Network 3,5 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_5_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_5_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -319,7 +319,7 @@ let () = record_proof "property" 3 "3,5";;
 
 
 (* Network 3,6 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_6_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_6_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -333,7 +333,7 @@ let () = record_proof "property" 3 "3,6";;
 
 
 (* Network 3,7 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_7_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_7_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -347,7 +347,7 @@ let () = record_proof "property" 3 "3,7";;
 
 
 (* Network 3,8 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_8_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_8_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -361,7 +361,7 @@ let () = record_proof "property" 3 "3,8";;
 
 
 (* Network 3,9 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_9_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_9_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -375,7 +375,7 @@ let () = record_proof "property" 3 "3,9";;
 
 
 (* Network 4,1 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_1_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_1_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -389,7 +389,7 @@ let () = record_proof "property" 3 "4,1";;
 
 
 (* Network 4,2 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_2_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_2_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -403,7 +403,7 @@ let () = record_proof "property" 3 "4,2";;
 
 
 (* Network 4,3 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_3_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_3_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -417,7 +417,7 @@ let () = record_proof "property" 3 "4,3";;
 
 
 (* Network 4,4 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_4_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_4_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -431,7 +431,7 @@ let () = record_proof "property" 3 "4,4";;
 
 
 (* Network 4,5 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_5_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_5_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -445,7 +445,7 @@ let () = record_proof "property" 3 "4,5";;
 
 
 (* Network 4,6 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_6_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_6_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -459,7 +459,7 @@ let () = record_proof "property" 3 "4,6";;
 
 
 (* Network 4,7 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_7_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_7_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -473,7 +473,7 @@ let () = record_proof "property" 3 "4,7";;
 
 
 (* Network 4,8 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_8_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_8_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -487,7 +487,7 @@ let () = record_proof "property" 3 "4,8";;
 
 
 (* Network 4,9 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_4_9_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_4_9_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -501,7 +501,7 @@ let () = record_proof "property" 3 "4,9";;
 
 
 (* Network 5,1 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_1_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_1_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -515,7 +515,7 @@ let () = record_proof "property" 3 "5,1";;
 
 
 (* Network 5,2 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_2_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_2_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -529,7 +529,7 @@ let () = record_proof "property" 3 "5,2";;
 
 
 (* Network 5,3 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_3_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_3_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -543,7 +543,7 @@ let () = record_proof "property" 3 "5,3";;
 
 
 (* Network 5,4 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_4_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_4_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -557,7 +557,7 @@ let () = record_proof "property" 3 "5,4";;
 
 
 (* Network 5,5 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_5_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_5_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -571,7 +571,7 @@ let () = record_proof "property" 3 "5,5";;
 
 
 (* Network 5,6 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_6_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_6_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -585,7 +585,7 @@ let () = record_proof "property" 3 "5,6";;
 
 
 (* Network 5,7 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_7_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_7_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -599,7 +599,7 @@ let () = record_proof "property" 3 "5,7";;
 
 
 (* Network 5,8 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_8_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_8_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
@@ -613,7 +613,7 @@ let () = record_proof "property" 3 "5,8";;
 
 
 (* Network 5,9 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_5_9_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_5_9_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 

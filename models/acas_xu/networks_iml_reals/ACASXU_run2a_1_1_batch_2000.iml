@@ -36,7 +36,7 @@ let layer0 = FC.fc FC.relu (
     function
         Rows -> 50.
         | Cols -> 6.
-        | Value (i,j) -> Map.get (i,j) layer0_map
+        | Value (i,j) -> (Map.get (i,j) layer0_map)
     )
 
     let layer1_map =
@@ -301,7 +301,7 @@ let layer1 = FC.fc FC.relu (
     function
         Rows -> 50.
         | Cols -> 51.
-        | Value (i,j) -> Map.get (i,j) layer1_map
+        | Value (i,j) -> (Map.get (i,j) layer1_map)
     )
 
     let layer2_map =
@@ -566,7 +566,7 @@ let layer2 = FC.fc FC.relu (
     function
         Rows -> 50.
         | Cols -> 51.
-        | Value (i,j) -> Map.get (i,j) layer2_map
+        | Value (i,j) -> (Map.get (i,j) layer2_map)
     )
 
     let layer3_map =
@@ -831,7 +831,7 @@ let layer3 = FC.fc FC.relu (
     function
         Rows -> 50.
         | Cols -> 51.
-        | Value (i,j) -> Map.get (i,j) layer3_map
+        | Value (i,j) -> (Map.get (i,j) layer3_map)
     )
 
     let layer4_map =
@@ -1096,7 +1096,7 @@ let layer4 = FC.fc FC.relu (
     function
         Rows -> 50.
         | Cols -> 51.
-        | Value (i,j) -> Map.get (i,j) layer4_map
+        | Value (i,j) -> (Map.get (i,j) layer4_map)
     )
 
     let layer5_map =
@@ -1361,7 +1361,7 @@ let layer5 = FC.fc FC.relu (
     function
         Rows -> 50.
         | Cols -> 51.
-        | Value (i,j) -> Map.get (i,j) layer5_map
+        | Value (i,j) -> (Map.get (i,j) layer5_map)
     )
 
     let layer6_map =
@@ -1397,7 +1397,7 @@ let layer6 = FC.fc FC.relu (
     function
         Rows -> 5.
         | Cols -> 51.
-        | Value (i,j) -> Map.get (i,j) layer6_map
+        | Value (i,j) -> (Map.get (i,j) layer6_map)
     )
 
     end

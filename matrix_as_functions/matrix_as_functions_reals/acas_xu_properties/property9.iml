@@ -10,24 +10,24 @@ instead.
 *)
 
 let precondition9 (dist, angle, angle_int, vown, vint) =
-  (2000 <= dist && dist <= 7000) &&
-  (angle = 0) &&
-  (angle_int = 3) &&
-  (100 <= vown && vown <= 150) &&
-  (0 <= vint && vint <= 150)
+  (2000. <=. dist && dist <=. 7000.) &&
+  (-0.4 <=. angle && angle <=. -0.14) &&
+  (-3.141592 <=. angle_int && angle <=. (-3.141592 +. 0.01)) &&
+  (100. <=. vown && vown <=. 150.) &&
+  (0. <=. vint && vint <=. 150.)
 ;;
 
-let postcondition9 output = 
-  let g i j = output (Matrix.Value (i,j)) in
-  let coc = g 0 0 in
-  let weak_left = g 0 1 in
-  let weak_right = g 0 2 in
-  let strong_left = g 0 3 in
-  let strong_right = g 0 4 in
-  ( strong_left <= coc &&
-    strong_left <= weak_left && 
-    strong_left <= weak_right &&
-    strong_left <= strong_right
+let postcondition9 output =
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  ( strong_left <=. coc &&
+    strong_left <=. weak_left && 
+    strong_left <=. weak_right &&
+    strong_left <=. strong_right
   )
 ;;
 
@@ -38,7 +38,7 @@ let property9 network x =
 
 
 (* Network 3,3 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_3_3_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_3_3_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 

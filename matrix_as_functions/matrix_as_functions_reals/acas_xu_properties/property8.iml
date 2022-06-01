@@ -10,31 +10,32 @@ for COC is minimal.
 *)
 
 let precondition8 (dist, angle, angle_int, vown, vint) = 
-  (0 <= dist && dist <= 60760) &&
-  (-3 <= angle && angle <= -2) &&
-  (angle_int = 0) &&
-  (600 <= vown && vown <= 1200) &&
-  (600 <= vint && vint <= 1200)
+  (0. <=. dist && dist <=. 60760.) &&
+  (-3.141592 <=. angle && angle <=. -0.75) &&
+  (-0.1 <=. angle_int && angle_int <=. 0.1) &&
+  (600. <=. vown && vown <=. 1200.) &&
+  (600. <=. vint && vint <=. 1200.)
 ;;
 
 let postcondition8 output =
-  let g i j = output (Matrix.Value (i,j)) in
-  let coc = g 0 0 in
-  let weak_left = g 0 1 in
-  let weak_right = g 0 2 in
-  let strong_left = g 0 3 in
-  let strong_right = g 0 4 in
-  ( weak_left <= coc &&
-    weak_left <= strong_right && 
-    weak_left <= weak_right &&
-    weak_left <= strong_left
+  let g i j = Matrix.nth output i j in
+  let coc = g 0. 0. in
+  let weak_left = g 0. 1. in
+  let weak_right = g 0. 2. in
+  let strong_left = g 0. 3. in
+  let strong_right = g 0. 4. in
+  ( weak_left <=. coc &&
+    weak_left <=. strong_right && 
+    weak_left <=. weak_right &&
+    weak_left <=. strong_left
   ) ||
-  ( weak_right <= coc &&
-    weak_right <= strong_right && 
-    weak_right <= weak_left &&
-    weak_right <= strong_left
+  ( weak_right <=. coc &&
+    weak_right <=. strong_right && 
+    weak_right <=. weak_left &&
+    weak_right <=. strong_left
   )
 ;;
+
 
 let property8 network x = 
   is_valid x && precondition8 x ==> postcondition8 (network x)
@@ -43,7 +44,7 @@ let property8 network x =
 
 
 (* Network 2,9 *)
-let () = System.use("./acas_xu/networks_iml/ACASXU_run2a_2_9_batch_2000.iml");;
+let () = System.use("../../models/acas_xu/networks_iml_reals/ACASXU_run2a_2_9_batch_2000.iml");;
 
 let run (dist, angle, angle_int, vown, vint) =
   let open Weights in 
