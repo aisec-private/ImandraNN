@@ -90,8 +90,6 @@ Findlib has been successfully loaded. Additional directives:
 /usr/local/var/imandra/_opam/lib/imandra-tools-ast/imandra_tools_ast.cma: loaded
 /usr/local/var/imandra/_opam/lib/pbrt: added to search path
 /usr/local/var/imandra/_opam/lib/pbrt/pbrt.cma: loaded
-/usr/local/var/imandra/_opam/lib/ocaml-protoc: added to search path
-/usr/local/var/imandra/_opam/lib/ocaml-protoc/ocaml_protoc.cma: loaded
 /usr/local/var/imandra/_opam/lib/opentelemetry: added to search path
 /usr/local/var/imandra/_opam/lib/opentelemetry/opentelemetry.cma: loaded
 /usr/local/var/imandra/_opam/lib/imandra-tools: added to search path

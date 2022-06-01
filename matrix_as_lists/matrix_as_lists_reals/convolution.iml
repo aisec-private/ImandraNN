@@ -21,7 +21,7 @@ module Convolution = struct
         
 
     (* Apply convolution operation with given filter on given input 2d matrix *)
-    let convolution (input: real Matrix.matrix) (filter: real Matrix.matrix) = 
+    let convolution (input: real Matrix.t) (filter: real Matrix.t) = 
         if not (Matrix.is_valid input) || not (Matrix.is_valid filter) then Error "convolution: invalid matrix" else
         let (i_rows, _) = Matrix.dimensions input in
         let (f_rows, _) = Matrix.dimensions filter in
@@ -34,7 +34,7 @@ module Convolution = struct
         res
 
     (* Apply convoluiton operation with given filter on input 3d matrix, i.e. an image with channels *)
-    let conv_channels (input: real Matrix.matrix list) (filter: real Matrix.matrix list) =
+    let conv_channels (input: real Matrix.t list) (filter: real Matrix.t list) =
         if List.length input <> List.length filter then Error "conv_channels: invalid dimensions" else
         let m = Vec.map2 convolution input filter in                                (* (m: result real matrix result) -> need to convert to real matrix result *)
         let acc_fun acc el = Res.bind2 acc el (fun acc el -> Ok (acc @ [el])) in

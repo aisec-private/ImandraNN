@@ -10,7 +10,7 @@ module FC = struct
         let z = dot_product w i' in
         Res.map f z
 
-    let rec fc f (weights:real Matrix.matrix) (input:real Vec.vector) = match weights with
+    let rec fc f (weights:real Matrix.t) (input:real Vec.t) = match weights with
         | [] -> Ok []
         | w::ws -> Res.lift2 List.cons (activation f w input) (fc f ws input)
 end

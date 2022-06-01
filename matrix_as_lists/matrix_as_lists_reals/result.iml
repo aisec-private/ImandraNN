@@ -1,0 +1,67 @@
+(* Module Res extends built-in ('a, 'b) result type *)
+module Res = struct
+    (* let map (f: 'a -> 'b) (x: ('a, 'c) result) = match x with
+        | Ok x' -> Ok (f x')
+        | Error msg -> Error msg *)
+
+    let map = Result.map 
+
+    (* let bind (x: ('a, 'b) result) (f: 'a -> ('c, 'b) result) = match x with 
+        | Ok x' -> f x'
+        | Error msg -> Error msg *)
+    let bind = Result.(>>=)
+
+    let bind2 (x: ('a, 'b) result) (y: ('c, 'b) result) (f: 'a -> 'c -> ('d, 'b) result) = match (x,y) with 
+        | (Ok x', Ok y') -> f x' y'
+        | (Error msg, _) | (_, Error msg) -> Error msg
+
+    let flatten = function
+        | Error (Error msg) -> Error msg
+        | Error (Ok x) -> Error x
+        | Ok (Ok x) -> Ok x
+        | Ok (Error msg) -> Error msg
+
+    let lift (f: 'a -> 'r) (a: ('a, 'b) result) = match a with
+        | Ok a' -> Ok (f a')
+        | Error msg -> Error msg
+        
+    let lift2 (f: 'a -> 'b -> 'r) (a: ('a, 'd) result) (b: ('b, 'd) result) = match (a, b) with
+        | (Ok a', Ok b') -> Ok (f a' b')
+        | (Error msg, _) -> Error msg
+        | (_, Error msg) -> Error msg
+        
+    let rec extract_list l = match l with   (* return: ('a list, 'b) result *)
+        | [] -> Ok []
+        | (Ok x)::tail -> lift (List.cons x) (extract_list tail)
+        | (Error msg)::tail -> Error msg
+    
+    let is_err = Result.is_error
+
+    let is_ok = Result.is_ok
+        (* comparison operators *)
+    
+    let lte res eps = match res with
+        | Ok res' -> res' <=. eps
+        | Error _ -> false
+
+    let gte x y = match (x, y) with
+        | (Ok x', Ok y') -> x' >=. y'
+        | (_, _)         -> false
+
+    let eq x y = match (x, y) with
+        | (Ok x', Ok y') -> x' = y'
+        | (_, _)         -> false
+
+    let to_bool (x: (bool, 'b) result) = match x with
+        | (Ok true) -> true
+        | _ -> false
+    (* let is_approx a b delta = let abs x = if x <. 0. then (-1. *. x) else x in 
+        lift2 (fun a' b' -> abs(a' -. b') <=. delta) a b;;
+
+    let lt x y = bind2 x y (fun a b -> Ok (a <. b))
+
+    let or x y = bind2 x y (fun a b -> Ok (a || b))
+
+    let and x y = bind2 x y (fun a b -> Ok (a && b)) *)
+end
+

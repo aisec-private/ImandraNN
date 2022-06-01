@@ -1,5 +1,6 @@
 type 'a vector = 'a list;;
 type 'a matrix = 'a vector list;;
+let () = System.use "result.iml"
 
 
 (* ugly util function to print dimensions *)
@@ -21,67 +22,9 @@ let rec i_to_s i = if i <= 9 then i_to_s' i else
 
 (* let i_to_s i = Z.to_string i [@@program];; *)
 
-(* Module Res extends built-in ('a, 'b) result type *)
-module Res = struct
-    (* let map (f: 'a -> 'b) (x: ('a, 'c) result) = match x with
-        | Ok x' -> Ok (f x')
-        | Error msg -> Error msg *)
-
-    let map = Result.map 
-
-    (* let bind (x: ('a, 'b) result) (f: 'a -> ('c, 'b) result) = match x with 
-        | Ok x' -> f x'
-        | Error msg -> Error msg *)
-    let bind = Result.(>>=)
-
-    let bind2 (x: ('a, 'b) result) (y: ('c, 'b) result) (f: 'a -> 'c -> ('d, 'b) result) = match x with 
-        | Ok x' -> (fun y -> match y with 
-            | Ok y' -> f x' y'
-            | Error msg -> Error msg) y
-        | Error msg -> Error msg
-
-    let flatten = function
-        | Error (Error msg) -> Error msg
-        | Error (Ok x) -> Error x
-        | Ok (Ok x) -> Ok x
-        | Ok (Error msg) -> Error msg
-
-    let lift (f: 'a -> 'r) (a: ('a, 'b) result) = match a with
-        | Ok a' -> Ok (f a')
-        | Error msg -> Error msg
-        
-    let lift2 (f: 'a -> 'b -> 'r) (a: ('a, 'd) result) (b: ('b, 'd) result) = match (a, b) with
-        | (Ok a', Ok b') -> Ok (f a' b')
-        | (Error msg, _) -> Error msg
-        | (_, Error msg) -> Error msg
-        
-    let rec extract_list l = match l with   (* return: ('a list, 'b) result *)
-        | [] -> Ok []
-        | (Ok x)::tail -> lift (List.cons x) (extract_list tail)
-        | (Error msg)::tail -> Error msg
-    
-    let is_err = Result.is_error
-
-    let is_ok = Result.is_ok
-        (* comparison operators *)
-    
-    let lte res eps = match res with
-        | Ok res' -> res' <=. eps
-        | Error _ -> false
-  
-    (* let is_approx a b delta = let abs x = if x <. 0. then (-1. *. x) else x in 
-        lift2 (fun a' b' -> abs(a' -. b') <=. delta) a b;;
-
-    let lt x y = bind2 x y (fun a b -> Ok (a <. b))
-
-    let or x y = bind2 x y (fun a b -> Ok (a || b))
-
-    let and x y = bind2 x y (fun a b -> Ok (a && b)) *)
-end
-
 (* List functions *)
 module Vec = struct
-    type 'a vector = 'a list
+    type 'a t = 'a list
 
     (* let rec map2 (f: 'a -> 'b -> 'c) (x: 'a vector) (y: 'b vector) = match x with
         | [] -> (fun y -> match y with                  (* use of anonymous function otherwise Syntax error *)
@@ -120,10 +63,33 @@ module Vec = struct
     let max_i' a b = if a > b then a else b
     
     let max_i v = List.fold_left max_i' 0 v
+
+    let rec argmax' v i i_max max_val = match v with
+        | []      -> i_max 
+        | (x::xs) -> if x >. max_val then (
+                argmax' xs (i+1) i x
+            ) else (
+                argmax' xs (i+1) i_max max_val
+            )
+    let argmax (v: 'a t): int = match v with 
+        | []      -> 0 
+        | (x::xs) -> argmax' xs 1 0 x
+
+    let rec length_real (v: 'a t) : real = match v with
+        | [] -> 0.
+        | (x::xs) -> 1. +. (length_real xs)
+
+    let mean (v: 'a t): 'a = let s = sum v in
+        let l = length_real v in
+        s /. l
+
+    let rec is_positive (v: 'a t): bool = match v with 
+        | [] -> true
+        | (x::xs) -> x >=. 0. && is_positive xs
 end
 
 module Matrix = struct
-    type 'a matrix = 'a vector list
+    type 'a t = 'a vector list
 
     let rec is_valid' (m:'a matrix) l = match m with 
         | [] -> true
@@ -141,19 +107,32 @@ module Matrix = struct
         | h::t -> let tl = map f t in
             Res.bind tl (fun a -> Ok ((List.map f h)::a))
 
-    let rec map2 (f: 'a -> 'b -> 'c) (x: 'a matrix) (y: 'b matrix) = match x with
-        | [] -> (match y with
+    let rec map2 (f: 'a -> 'b -> 'c) (x: 'a matrix) (y: 'b matrix) = match (x, y) with
+        | ([],[]) -> Ok []
+        | (x::xs, y::ys) -> (
+            let head = Vec.map2 f x y in
+            let tail = map2 f xs ys in
+            Res.lift2 List.cons head tail
+        )
+        | (_,_) -> Error "Invalid matrix sizes"
+        (* | [] -> (match y with
             | [] -> Ok []
             | y::ys  -> Error "map2: invalid list length.") (* use of parenthesis otherwise Syntax error *)
         | x::xs -> match y with 
             | [] -> Error "map2: invalid list length." 
             | y::ys -> let hd = Vec.map2 f x y in
                 let tl = map2 f xs ys in
-                Res.lift2 List.cons hd tl
+                Res.lift2 List.cons hd tl *)
 
     let sum (m: real matrix) = Vec.sum (List.map Vec.sum m);;
 
     let max m = Vec.max (List.map Vec.max m);;
+
+    let argmax m = let rows_max = List.map Vec.max m in
+        let max_row = Vec.argmax rows_max in
+        let max_col = Res.map Vec.argmax (Vec.nth max_row m) in
+        Res.map (fun x -> max_row, x) max_col 
+
 
     let dimensions m = if m = [] 
                    then (0, 0)

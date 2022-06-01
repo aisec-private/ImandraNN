@@ -1,0 +1,190 @@
+(* forall F: CNN, forall i: happy-face-image :     left_diagonal_filter \in F AND right_diagonal_filter \in F AND pos_weights F  ==> F(i) = Happy *)
+
+let (>>=) = Res.bind
+let (=?) = Res.eq
+let (>=?) = Res.gte
+let (&&?) = Res.eq
+
+let make_cnn w0 w4 = 
+    let layer_0 = Layer.convolution w0 in
+    let layer_1 = Layer.max_pool (2,2) in
+    let layer_2 = Layer.flatten in
+    let layer_4 = Layer.fc (fun x -> x) w4 in
+    fun input -> layer_0 input >>= layer_1 >>= layer_2 >>= layer_4 >>= arg_max
+;;
+
+
+(* let check_weights_dimensions w0 w4 = 
+    let open Matrix in
+    let (rows_0, cols_0) = dimensions w0 in
+    let (rows_4, cols_4) = dimensions w4 in
+    ((rows_0, cols_0) = (2,2)) &&  
+    ((rows_4, cols_4) = (2,33))
+;; *)
+(* replace dimensions with correct measures *)
+
+
+let is_left_diagonal (m: 'a Matrix.t) ((i,j): int*int) : bool = 
+    let is_valid m = (Matrix.dimensions m) = (9, 9) in
+    (
+        is_valid m && 
+        (Matrix.nth (0+i, 0+j) m)  =? (Ok 1.) && 
+        (Matrix.nth (0+i, 1+j) m)  =? (Ok 0.) &&
+        (Matrix.nth (0+i, 2+j) m)  =? (Ok 0.) &&
+        (Matrix.nth (1+i, 0+j) m)  =? (Ok 0.) && 
+        (Matrix.nth (1+i, 1+j) m)  =? (Ok 1.) && 
+        (Matrix.nth (1+i, 2+j) m)  =? (Ok 0.) && 
+        (Matrix.nth (2+i, 0+j) m)  =? (Ok 0.) && 
+        (Matrix.nth (2+i, 1+j) m)  =? (Ok 0.) && 
+        (Matrix.nth (2+i, 2+j) m)  =? (Ok 1.)
+    )
+;;
+
+let is_left_diagonal_present m = 
+    let open Matrix in    
+    (
+        (is_left_diagonal m (4,0)) ||
+        (is_left_diagonal m (5,0)) ||
+        (is_left_diagonal m (6,0)) ||
+        (is_left_diagonal m (4,1)) ||
+        (is_left_diagonal m (5,1)) ||
+        (is_left_diagonal m (6,1)) ||
+        (is_left_diagonal m (4,2)) ||
+        (is_left_diagonal m (5,2)) ||
+        (is_left_diagonal m (6,2))
+    )
+
+let is_right_diagonal (m: 'a Matrix.t) ((i,j): int*int): bool = 
+    let is_valid m = (Matrix.dimensions m) = (9, 9) in
+    (
+        is_valid m && 
+        (Matrix.nth (0+i, 0+j) m)  =? (Ok 0.) && 
+        (Matrix.nth (0+i, 1+j) m)  =? (Ok 0.) &&
+        (Matrix.nth (0+i, 2+j) m)  =? (Ok 1.) &&
+        (Matrix.nth (1+i, 0+j) m)  =? (Ok 0.) && 
+        (Matrix.nth (1+i, 1+j) m)  =? (Ok 1.) && 
+        (Matrix.nth (1+i, 2+j) m)  =? (Ok 0.) && 
+        (Matrix.nth (2+i, 0+j) m)  =? (Ok 1.) && 
+        (Matrix.nth (2+i, 1+j) m)  =? (Ok 0.) && 
+        (Matrix.nth (2+i, 2+j) m)  =? (Ok 0.)
+    )
+;;
+
+let is_right_diagonal_present m = 
+    let open Matrix in    
+    (
+        (is_right_diagonal m (4,4)) ||
+        (is_right_diagonal m (5,4)) ||
+        (is_right_diagonal m (6,4)) ||
+        (is_right_diagonal m (4,5)) ||
+        (is_right_diagonal m (5,5)) ||
+        (is_right_diagonal m (6,5)) ||
+        (is_right_diagonal m (4,6)) ||
+        (is_right_diagonal m (6,5)) ||
+        (is_right_diagonal m (6,6))
+    )
+
+let is_happy_image (m: 'a Matrix.t) =
+    let open Matrix in  
+    is_left_diagonal_present m &&
+    is_right_diagonal_present m
+
+let input = [
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+        [ 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 1.0; 0.0];
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+        [ 0.0; 1.0; 0.0; 0.0; 0.0; 0.0; 0.0; 1.0; 0.0];
+        [ 0.0; 0.0; 1.0; 0.0; 0.0; 0.0; 1.0; 0.0; 0.0];
+        [ 0.0; 0.0; 0.0; 1.0; 1.0; 1.0; 0.0; 0.0; 0.0];
+        [ 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0];
+];;
+
+
+(* Begin checking FC weights pseudo-monotonicity property *)
+let rec get_extreme_values' (a: 'a Vec.t) (threshold: 'a) (i:int): (int Vec.t) = 
+    match a with
+        | [] -> [] 
+        | (hd::tl) -> if hd >=. threshold then (
+            i::(get_extreme_values' tl threshold (i+1))
+        ) else (
+            get_extreme_values' tl threshold (i+1)
+        )
+
+let get_extreme_values (a: 'a Vec.t): (int Vec.t) =
+    let a_mean = Vec.mean a in
+    let a_max = Vec.max a in
+    let threshold = a_mean +. ((a_max -. a_mean) /. 2.) in
+    get_extreme_values' a threshold 0 
+
+let rec check_higher_happy_weights extreme_values w = match extreme_values with
+    | [] -> true
+    | (x::xs) -> (Matrix.nth (0,x) w) >=? (Matrix.nth (1,x) w) && check_higher_happy_weights xs w
+
+let greater_happy_weights (weights: 'a Matrix.t) (flatten_output: 'a Vec.t) : (bool, 'b) result = 
+    let extreme_values = get_extreme_values flatten_output in
+    if flatten_output = [] then (Ok false) else
+    Ok (check_higher_happy_weights extreme_values weights)
+(* End checking FC weights pseudo-monotonicity property *)
+
+
+(* f(x) = happy, if the sum of activations of the FC layer x_1 * w_1 + ... + x_n * w_n  is higher than the sum  x_1 * w_n+1 + ... + x_n * w_n+n *)
+let is_happy flatten_output weights =
+    let layer_4 = Layer.fc (fun x -> x) weights in
+    match (flatten_output >>= layer_4) with
+        | Ok (x::y::[]) -> x >. y
+        | _ -> false
+
+let max_bottom_left_corner (m: ('a Matrix.t, 'b) result) = 
+    (Res.map Matrix.dimensions m) = (Ok (4,4)) &&    
+    ((m >>= Matrix.argmax) = (Ok (2,0)) || (m >>= Matrix.argmax) = (Ok (3,1))) 
+
+let max_bottom_right_corner (m: ('a Matrix.t, 'b) result) = 
+    (Res.map Matrix.dimensions m) = (Ok (4,4)) &&    
+    ((m >>= Matrix.argmax) = (Ok (2,3)) || (m >>= Matrix.argmax) = (Ok (3,2))) 
+
+let has_pattern (m: (('a Matrix.t) Vec.t)): (bool, 'b) result = Ok (
+        max_bottom_left_corner (Vec.nth 0 m) &&
+        max_bottom_right_corner (Vec.nth 1 m)
+    )
+
+(* the pseudo-weights monotonicity lemma, for now we define it to use it as an assumption *)
+let pseudo_weights_monotonicity weights flatten_output =
+    Vec.is_positive flatten_output &&
+    Res.to_bool (greater_happy_weights weights flatten_output) ==>
+        is_happy (Ok flatten_output) weights
+    
+
+(* Tuned weights: given the feature map a with extreme values a_i, ... a_j, the weights that connect a_{i...j} 
+    to "Happy"  neuron are greater than those connecting extreme values to "Sad" neuron *)
+let tuned_weights (feature_map: (('a Matrix.t) Vec.t, 'b) result) (weights: 'a Matrix.t): bool = 
+    let flattened_feature_map = feature_map >>= Layer.flatten in
+    (feature_map >>= has_pattern) =? (Ok true) ==> (flattened_feature_map >>= (greater_happy_weights weights)) =? (Ok true)
+     
+(* 3. an adequate happy filter is the one that has the pooling layers shape S* for ideal happy image *)
+let check_adequate_happy_filter i (w: ('a Matrix.t) Vec.t): bool = 
+    let layer0 = Layer.convolution w in
+    is_happy_image i ==> ((layer0 [i]) >>= has_pattern) = (Ok true)
+;;
+
+(* Theorem: given a happy image x, an adequate filter and tuned weights, f(x) = Happy *)
+let filter_adequacy_happy w0 w4 i = 
+    let layer0 = Layer.convolution Weights.layer0 in
+    let f = make_cnn w0 w4 in
+    (
+        is_happy_image i &&
+        (* check_weights_dimensions w0 w4 && *)
+        check_adequate_happy_filter i w0 &&
+        tuned_weights  (layer0 [i]) w4
+    ) ==> (f [i]) = (Ok "Happy")
+;;
+
+let channels = [
+    0.9652837; 0.;        0.;        0.9652837;
+    0.;        1.0999786; 0.;        1.0999786;
+    2.0652623; 0.;        0.9652837; 1.0999786;
+    0.;        2.0652623; 1.0999786; 1.0999786;
+]
+
+
