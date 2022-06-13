@@ -12,7 +12,7 @@ instead.
 let precondition9 (dist, angle, angle_int, vown, vint) =
   (2000. <=. dist && dist <=. 7000.) &&
   (-0.4 <=. angle && angle <=. -0.14) &&
-  (-3.141592 <=. angle_int && angle <=. (-3.141592 +. 0.01)) &&
+  (-3.141592 <=. angle_int && angle_int <=. (-3.141592 +. 0.01)) &&
   (100. <=. vown && vown <=. 150.) &&
   (0. <=. vint && vint <=. 150.)
 ;;

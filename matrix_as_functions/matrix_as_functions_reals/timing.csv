@@ -45,10 +45,10 @@ property;network;result;time
 4;4,2;timeout;0.0
 4;4,3;proved;1095.725434
 10;4,5;refuted;517.952014
-9;3,3;proved;0.070159
 8;2,9;timeout;0.0
 4;4,5;proved;3501.565236
 4;4,6;proved;594.898958
 4;4,7;proved;23.378468
 4;4,8;proved;2274.992699
 4;4,9;timeout;0.0
+9;3,3;proved;109.300386

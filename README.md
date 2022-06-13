@@ -1,32 +1,34 @@
-## Imandra Neural Network Verification Library
+## CheckInn: Imandra Neural Network Verification Library
 
 ### File hierarchy
 
-This repository holds the code for the submission to PPDP2022 "Neural Network Verification with Imandra: a Holistic Approach".
-The code is separated into 6 parts:
-
-* `preliminary`: the implementation of a multi-perceptron trained on the Iris Dataset in IML (Section 2)
+This repository holds the code for the submission to PPDP2022 "CheckINN: Wide Range Neural Network Verification in Imandra".
+The code is separated into multiple parts:
 
 * `matrix_as_lists/matrix_as_lists_reals`:
-  - the library for representing convolutional neural networks (CNN) in IML (Section 3).
-  - code for experiments on filter properties (Section 7).
+  - Implementation of convolutional neural networks (CNN) in IML (Section 3).
+  - `extreme_value_lemma.iml`: lemma 4.1 for proving structural properties of CNNs (Section 4.2)
 
 * `matrix_as_lists/matrix_as_lists_integers`:
-  - the quantised version of the previous library, necessary to use Imandra's Blast strategy (Section 4).
-  - the implementation of multiple definitions of robustness (Section 4), and the evaluation of these multiple definitions.
+  - Quantised version of the previous implementation, necessary to use Imandra's `blast` strategy (Section 5).
+  - Implementation of multiple robustness definitions (Section 5), and their evaluation.
 
-* `matrix_as_functions`:
-  - the formalisation of Neural networks with Matrix as defined as functions as described in Section 5.
-  - the verification of a property on a quantised model from the ACAS-Xu benchmark
+* `matrix_as_functions/matrix_as_functions_integers`:
+  - Implementation of NN with matrices as functions (Section 6.1).
+  - Verification of properties from the ACAS Xu benchmark on pruned networks.
+
+* `matrix_as_functions/matrix_as_functions_reals`:
+  - Implementation of NN with matrices as functions with support for real numbers (Section 6.2, appendix E.1).
+  - Verification of properties from the ACAS Xu benchmark on pruned networks.
 
 * `matrix_as_records`:
-  - Matrix implemented as records as described in Section ?
-  - verification of properties on the ACAS Xu benchmark
+  - Implementation of NN with matrices as records (Appendix E.2).
+  - Verification of properties from the ACAS Xu benchmark on pruned networks.
 
 * `induction`:
   - the proof of properties on perceptrons by induction reasoning (Section 6).
 
-* `notebooks`: 
+* `notebooks`:
   - the python notebooks used to train the network and containing the script to convert trained networks to IML
   - the serialised networks in Keras' serialisation format
 

@@ -68,34 +68,3 @@ Findlib has been successfully loaded. Additional directives:
 /usr/local/var/imandra/_opam/lib/linenoise: added to search path
 /usr/local/var/imandra/_opam/lib/imandra-base/interactive: added to search path
 /usr/local/var/imandra/_opam/lib/imandra-client/lib: added to search path
-/usr/local/var/imandra/_opam/lib/re: added to search path
-/usr/local/var/imandra/_opam/lib/re/re.cma: loaded
-/usr/local/var/imandra/_opam/lib/uutf: added to search path
-/usr/local/var/imandra/_opam/lib/uutf/uutf.cma: loaded
-/usr/local/var/imandra/_opam/lib/tyxml/functor: added to search path
-/usr/local/var/imandra/_opam/lib/tyxml/functor/tyxml_f.cma: loaded
-/usr/local/var/imandra/_opam/lib/tyxml: added to search path
-/usr/local/var/imandra/_opam/lib/tyxml/tyxml.cma: loaded
-/usr/local/var/imandra/_opam/lib/imandra-document/tyxml: added to search path
-/usr/local/var/imandra/_opam/lib/imandra-document/tyxml/imandra_document_tyxml.cma: loaded
-/usr/local/var/imandra/_opam/lib/csv: added to search path
-/usr/local/var/imandra/_opam/lib/csv/csv.cma: loaded
-/usr/local/var/imandra/_opam/lib/decoders: added to search path
-/usr/local/var/imandra/_opam/lib/decoders/decoders.cma: loaded
-/usr/local/var/imandra/_opam/lib/decoders-yojson: added to search path
-/usr/local/var/imandra/_opam/lib/decoders-yojson/decoders_yojson.cma: loaded
-/usr/local/var/imandra/_opam/lib/gsl: added to search path
-/usr/local/var/imandra/_opam/lib/gsl/gsl.cma: loaded
-/usr/local/var/imandra/_opam/lib/imandra-tools-ast: added to search path
-/usr/local/var/imandra/_opam/lib/imandra-tools-ast/imandra_tools_ast.cma: loaded
-/usr/local/var/imandra/_opam/lib/pbrt: added to search path
-/usr/local/var/imandra/_opam/lib/pbrt/pbrt.cma: loaded
-/usr/local/var/imandra/_opam/lib/opentelemetry: added to search path
-/usr/local/var/imandra/_opam/lib/opentelemetry/opentelemetry.cma: loaded
-/usr/local/var/imandra/_opam/lib/imandra-tools: added to search path
-/usr/local/var/imandra/_opam/lib/imandra-tools/imandra_tools.cma: loaded
-/usr/local/var/imandra/_opam/lib/jupyter-imandra: added to search path
-/usr/local/var/imandra/_opam/lib/jupyter-imandra/jupyter_imandra.cma: loaded
-/usr/local/var/imandra/_opam/lib/imandra-voronoi: added to search path
-/usr/local/var/imandra/_opam/lib/imandra-voronoi/imandra_voronoi.cma: loaded
-- : unit = ()
